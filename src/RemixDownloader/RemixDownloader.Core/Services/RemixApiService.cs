@@ -27,7 +27,7 @@ namespace RemixDownloader.Core.Services
             client = new HttpClient(handler);
         }
 
-        public async Task<RemixUserListResponse> GetModelsForUserAsync(string userId, string continuationUrl)
+        public async Task<RemixUserListResponse> GetModelsForUserAsync(string userId, string continuationUrl = null)
         {
             string json = string.Empty;
 
