@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using RemixDownloader.Core.Models;
 
@@ -14,7 +15,10 @@ namespace RemixDownloader.Core.Services
 
         private readonly HttpClient client;
         private const string ApiRoot = "https://api.remix3d.com/v3";
-        
+
+        // User endpoint hxxps://api.remix3d.com:443/v3/users/{userId}/uploads?
+        // Board endpoint hxxps://api.remix3d.com:443/v3/boards/{boardId}?
+
         public RemixApiService()
         {
             var handler = new HttpClientHandler();
@@ -39,11 +43,30 @@ namespace RemixDownloader.Core.Services
             else
             {
                 // If this is a continuation, there is a continuation token already prepared for us.
-                // ex. "continuationUri": "hXXp://api.remix3d.com:443/v3/users/xxxxxxxx/uploads?%24continuationToken=xxxxxxxxxx."
+                // ex. "continuationUri": "hXXp://api.remix3d.com:443/v3/users/{userId}/uploads?%24continuationToken=xxxxxxxxxx."
                 json = await client.GetStringAsync(continuationUrl);
             }
             
             return RemixUserListResponse.FromJson(json);
+        }
+
+        public async Task<RemixBoardResponse> GetModelsForBoardAsync(string boardId, string continuationUrl = null)
+        {
+            string json = string.Empty;
+
+            if (string.IsNullOrEmpty(continuationUrl))
+            {
+                // If starting from scratch for a new user
+                json = await client.GetStringAsync($"{ApiRoot}/boards/{boardId}");
+            }
+            else
+            {
+                // If this is a continuation, there is a continuation token already prepared for us.
+                // ex. "continuationUri": "hXXp://api.remix3d.com:443/v3/boards/{boardId}?%24continuationToken=xxxxxxxxxx."
+                json = await client.GetStringAsync(continuationUrl);
+            }
+
+            return RemixBoardResponse.FromJson(json);
         }
 
 
@@ -88,9 +111,15 @@ namespace RemixDownloader.Core.Services
         ///  </summary>
         ///  <param name="model">Model to get file for</param>
         ///  <param name="levelOfDetail">Level of detail requested in the downloaded model</param>
+        ///  <param name="cancellationToken">Cancels operation and returns null</param>
         ///  <returns></returns>
-        public async Task<byte[]> DownloadModelFilesAsync(ModelResult model, AssetOptimizationType levelOfDetail = AssetOptimizationType.OriginalDownload)
+        public async Task<byte[]> DownloadModelFilesAsync(ModelResult model, AssetOptimizationType levelOfDetail, CancellationToken cancellationToken = new CancellationToken())
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
+
             string downloadUrl = string.Empty;
 
             if (levelOfDetail == AssetOptimizationType.OriginalView)
@@ -111,9 +140,7 @@ namespace RemixDownloader.Core.Services
                 return null;
             }
 
-            var response = await client.GetByteArrayAsync(downloadUrl);
-
-            return response;
+            return await client.GetByteArrayAsync(downloadUrl);
         }
 
         public void Dispose()
