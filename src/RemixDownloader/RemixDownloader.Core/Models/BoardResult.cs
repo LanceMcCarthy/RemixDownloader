@@ -1,13 +1,14 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace RemixDownloader.Core.Models
 {
     public class BoardResult
     {
-        [JsonProperty("board")]
-        public Board Board { get; set; }
+        [JsonProperty("results")]
+        public List<ModelResult> Results { get; set; }
 
-        [JsonProperty("type")]
-        public string Type { get; set; }
+        [JsonProperty("continuationUri")]
+        public string ContinuationUri { get; set; }
     }
 }

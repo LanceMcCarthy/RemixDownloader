@@ -1,47 +1,230 @@
 ﻿<Page x:Class="RemixDownloader.Uwp.MainPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:controls="using:Microsoft.UI.Xaml.Controls"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:local="using:RemixDownloader.Uwp"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:primitives="using:Telerik.UI.Xaml.Controls.Primitives"
+      xmlns:viewModels="using:RemixDownloader.Uwp.ViewModels"
       mc:Ignorable="d"
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
       RequestedTheme="Light">
 
-    <Grid ColumnSpacing="10">
+    <Page.DataContext>
+        <viewModels:MainViewModel x:Name="ViewModel"/>
+    </Page.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" />
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition />
+            <ColumnDefinition Width="1*" />
         </Grid.ColumnDefinitions>
-        <StackPanel HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Padding="10"
-                    Spacing="10">
-            <TextBox x:Name="UserIdTextBox"
-                     Text="46rbnCYv5fy" />
-            <Button Content="Get Models (or load more)"
-                    Click="Load_OnClick" />
-            <Button Content="Reset"
-                    Click="Reset_OnClick" />
-        </StackPanel>
+
+        <Border Grid.Column="0"
+                BorderBrush="{ThemeResource ApplicationForegroundThemeBrush}"
+                BorderThickness="0,0,0,1"
+                Background="AntiqueWhite">
+            <TextBlock Text="Available Models"
+                       HorizontalAlignment="Center"
+                       Style="{ThemeResource TitleTextBlockStyle}" />
+        </Border>
+
+        <Border Background="AntiqueWhite"
+                BorderBrush="{ThemeResource ApplicationForegroundThemeBrush}"
+                BorderThickness="0,0,0,1"
+                Grid.Row="0"
+                Grid.Column="2">
+            <TextBlock Text="Selected Models"
+                       HorizontalAlignment="Center"
+                       Style="{ThemeResource TitleTextBlockStyle}" />
+        </Border>
 
         <GridView x:Name="ModelsGridView"
-                  Grid.Column="1">
+                  ItemsSource="{Binding Models}"
+                  SelectionChanged="{x:Bind ViewModel.ModelsGridView_OnSelectionChanged}"
+                  SelectionMode="Extended"
+                  Grid.Row="1"
+                  Grid.Column="0">
             <GridView.ItemTemplate>
                 <DataTemplate>
                     <Grid>
                         <Image Source="{Binding PreviewImage.Source}"
-                               Width="100"
-                               Height="100" />
-
-                        <Border Background="#DDFFFFFF"
-                                VerticalAlignment="Bottom"
-                                Padding="10,5">
-                            <TextBlock Text="{Binding Description}" />
-                        </Border>
+                               Width="150"
+                               Height="150" />
+                        <StackPanel Background="#DDFFFFFF"
+                                    VerticalAlignment="Bottom"
+                                    Padding="10,5">
+                            <TextBlock Text="{Binding Name}"
+                                       FontWeight="Bold" />
+                            <TextBlock Text="{Binding FileSize, Converter={StaticResource FileSuffixConverter}}" />
+                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </GridView.ItemTemplate>
         </GridView>
+
+        <ListView x:Name="ModelsListView"
+                  ItemsSource="{Binding SelectedModels}"
+                  ItemContainerStyle="{StaticResource StretchedListViewItemStyle}"
+                  Grid.Column="2"
+                  Grid.Row="1">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Background="DarkSlateGray">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Image Source="{Binding Model.PreviewImage.Source}"
+                               Stretch="Fill"
+                               HorizontalAlignment="Stretch"/>
+                        <StackPanel Grid.Column="1"
+                                    Background="#DDFFFFFF"
+                                    VerticalAlignment="Bottom"
+                                    Padding="10,5">
+                            <TextBlock Text="{Binding Model.Name}"
+                                       FontWeight="Bold" />
+                            <TextBlock Text="{Binding Model.FileSize, Converter={StaticResource FileSuffixConverter}}" />
+                            <TextBlock Text="{Binding Status}"
+                                       Visibility="{Binding Status, Converter={StaticResource NullToVisibilityConverter}}"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding FilePath}"
+                                       Visibility="{Binding Status, Converter={StaticResource NullToVisibilityConverter}}"/>
+                        </StackPanel>
+
+                        <primitives:RadBusyIndicator x:Name="BusyIndicator"
+                                                     Content="{Binding Status}"
+                                                     IsActive="{Binding IsDownloading}"
+                                                     AnimationStyle="AnimationStyle7" />
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <Grid Background="WhiteSmoke"
+              Grid.Row="2"
+              Grid.Column="0"
+              ColumnSpacing="10"
+              Padding="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Board ID:"/>
+                <TextBox x:Name="BoardIdTextBox"
+                         Text="{Binding BoardId}"/>
+            </StackPanel>
+
+            <Button x:Name="GetBoardModelsButton"
+                    Content="{Binding BoardButtonText}"
+                    Background="LightSeaGreen"
+                    Foreground="White"
+                    Click="{x:Bind ViewModel.LoadBoardModels_OnClick}"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Stretch"
+                    Grid.Column="1"/>
+
+            <TextBlock Text="OR"
+                       FontWeight="Bold"
+                       VerticalAlignment="Bottom"
+                       HorizontalAlignment="Center"
+                       Margin="10"
+                       Grid.Column="2"/>
+
+            <StackPanel Grid.Column="3">
+                <TextBlock Text="User ID:"/>
+                <TextBox x:Name="UserIdTextBox"
+                         Text="{Binding UserId}"/>
+            </StackPanel>
+
+            <Button x:Name="GetUserModelsButton"
+                    Content="{Binding UserButtonText}"
+                    Background="MediumSlateBlue"
+                    Foreground="White"
+                    Click="{x:Bind ViewModel.LoadUserModels_OnClick}"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Stretch"
+                    Grid.Column="4" 
+                    Margin="0,0,10,0"/>
+
+            <Button Content="Reset"
+                    Foreground="White"
+                    Background="DarkRed"
+                    Click="{x:Bind ViewModel.Reset_OnClick}"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Stretch"
+                    Grid.Column="5" />
+        </Grid>
+
+        <Grid Background="WhiteSmoke"
+              Grid.Column="2"
+              Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <ComboBox x:Name="LevelOfDetailComboBox"
+                      Header="Level of Detail"
+                      ItemsSource="{Binding ModelOptimizationOptions}"
+                      SelectedItem="{Binding SelectedOptimizationOption, Mode=TwoWay}"
+                      SelectedIndex="1"
+                      VerticalAlignment="Bottom"
+                      Margin="10"/>
+
+            <Button x:Name="DownloadButton"
+                    Content="Download Selected Model Files"
+                    Click="{x:Bind ViewModel.Download_OnClick}"
+                    Background="DarkGoldenrod"
+                    Foreground="White"
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Bottom" 
+                    Margin="10"/>
+        </Grid>
+
+        <Rectangle Fill="{ThemeResource ApplicationForegroundThemeBrush}"
+                   Width="1"
+                   Grid.Column="1"
+                   Grid.Row="0"
+                   Grid.RowSpan="3" />
+
+        <Grid x:Name="BusyOverlayGrid"
+              Visibility="{Binding IsBusy}"
+              Grid.Row="1"
+              Grid.RowSpan="2"
+              Grid.Column="0"
+              Grid.ColumnSpan="3"
+              Background="#AAFFFFFF">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="20">
+                <primitives:RadBusyIndicator x:Name="BusyIndicator"
+                                             Width="100"
+                                             Height="100"
+                                             Content="{Binding IsBusyMessage}"
+                                             IsActive="{Binding IsBusy}"
+                                             AnimationStyle="AnimationStyle5" />
+                <Button x:Name="CancelDownloadButton"
+                        Content="Cancel"
+                        Background="DarkRed"
+                        Foreground="White"
+                        HorizontalAlignment="Stretch"
+                        Click="{x:Bind ViewModel.Cancel_OnClick}" />
+            </StackPanel>
+        </Grid>
     </Grid>
 </Page>
