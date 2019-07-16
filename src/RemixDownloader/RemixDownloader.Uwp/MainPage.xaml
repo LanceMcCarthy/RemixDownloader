@@ -7,6 +7,8 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:primitives="using:Telerik.UI.Xaml.Controls.Primitives"
       xmlns:viewModels="using:RemixDownloader.Uwp.ViewModels"
+      xmlns:data="using:Telerik.UI.Xaml.Controls.Data"
+      xmlns:listView="using:Telerik.UI.Xaml.Controls.Data.ListView"
       mc:Ignorable="d"
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
       RequestedTheme="Light">
@@ -71,14 +73,10 @@
             </GridView.ItemTemplate>
         </GridView>
 
-        <!--<primitives:RadBusyIndicator x:Name="BusyIndicator"
-                                     Content="Loading models..."
-                                     IsActive="{Binding IsFetchingModels}"
-                                     AnimationStyle="AnimationStyle7" />-->
-
-        <ListView x:Name="ModelsListView"
+        <ListView x:Name="SelectedModelsListView"
                   ItemsSource="{Binding SelectedModels}"
                   ItemContainerStyle="{StaticResource StretchedListViewItemStyle}"
+                  SelectionMode="None"
                   Grid.Column="2"
                   Grid.Row="1">
             <ListView.ItemTemplate>
@@ -91,21 +89,30 @@
                         <Image Source="{Binding Model.PreviewImage.Source}"
                                Stretch="Fill"
                                HorizontalAlignment="Stretch" />
-                        <StackPanel Grid.Column="1"
-                                    Background="#DDFFFFFF"
-                                    VerticalAlignment="Bottom"
-                                    Padding="10,5">
+                        <Border Background="#DDFFFFFF"
+                                VerticalAlignment="Top"
+                                Grid.Column="1"
+                                Padding="10,5">
                             <TextBlock Text="{Binding Model.Name}"
                                        FontWeight="Bold" />
-                            <TextBlock Text="{Binding Model.FileSize, Converter={StaticResource FileSuffixConverter}}" />
-                            <Border Background="{Binding Status, Converter={StaticResource ResultToBrushConverter}}"
-                                    Visibility="{Binding Status, Converter={StaticResource NullToVisibilityConverter}}"
-                                    Padding="5">
-                                <TextBlock Text="{Binding Status}"
-                                           Foreground="White"
-                                           TextWrapping="Wrap" />
-                            </Border>
-                        </StackPanel>
+                        </Border>
+
+                        <Border Background="{Binding Status, Converter={StaticResource ResultToBrushConverter}}"
+                                Visibility="{Binding Status, Converter={StaticResource NullToVisibilityConverter}}"
+                                VerticalAlignment="Bottom"
+                                Grid.Column="1"
+                                Padding="10,5">
+                            <TextBlock Text="{Binding Status}"
+                                       Foreground="White"
+                                       TextWrapping="Wrap" />
+                        </Border>
+
+                        <TextBlock Text="{Binding Model.FileSize, Converter={StaticResource FileSuffixConverter}}"
+                                   VerticalAlignment="Bottom"
+                                   HorizontalAlignment="Right"
+                                   Grid.Column="1"
+                                   Foreground="#DDFFFFFF"
+                                   Margin="5" />
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>

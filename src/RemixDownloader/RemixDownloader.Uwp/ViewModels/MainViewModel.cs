@@ -16,12 +16,14 @@ using RemixDownloader.Core.Models;
 using RemixDownloader.Core.Services;
 using RemixDownloader.Uwp.Common;
 using RemixDownloader.Uwp.Models;
+using Telerik.Core.Data;
+using Telerik.UI.Xaml.Controls.Data.ListView;
 
 namespace RemixDownloader.Uwp.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
-        private ObservableCollection<ModelResult> models;
+        private IncrementalLoadingCollection<ModelResult> models;
         private ObservableCollection<ModelResultViewModel> selectedModels;
         private string continuationUri = string.Empty;
         private CancellationTokenSource cancellationTokenSource;
@@ -35,6 +37,8 @@ namespace RemixDownloader.Uwp.ViewModels
         private string downloadFolderName = "No Folder Selected";
         private bool isReadyForDownload;
 
+        private string currentUserId;
+
         public MainViewModel()
         {
             //if (DesignMode.DesignModeEnabled || DesignMode.DesignMode2Enabled)
@@ -45,16 +49,16 @@ namespace RemixDownloader.Uwp.ViewModels
             SelectedOptimizationOption = ModelOptimizationOptions[1];
         }
 
-        public ObservableCollection<ModelResult> Models
-        {
-            get => models ?? (models = new ObservableCollection<ModelResult>());
-            set => SetProperty(ref models, value);
-        }
-
         public ObservableCollection<ModelResultViewModel> SelectedModels
         {
             get => selectedModels ?? (selectedModels = new ObservableCollection<ModelResultViewModel>());
             set => SetProperty(ref selectedModels, value);
+        }
+
+        public IncrementalLoadingCollection<ModelResult> Models
+        {
+            get => models;
+            set => SetProperty(ref models, value);
         }
 
         public List<string> ModelOptimizationOptions { get; } = new List<string> { "OriginalView", "OriginalDownload", "Preview", "Performance", "Quality", "HoloLens", "WindowsMR" };
@@ -150,39 +154,45 @@ namespace RemixDownloader.Uwp.ViewModels
             if (string.IsNullOrEmpty(UserId))
             {
                 await new MessageDialog("You need to enter a valid User ID.").ShowAsync();
-                return;
             }
+            else
+            {
+                // Need to keep a safe copy, in case the user changes the ID in th emiddle of automatic load on demand
+                currentUserId = UserId;
 
+                Models = new IncrementalLoadingCollection<ModelResult>(GetMoreItems) { BatchSize = 10 };
+
+                UserButtonText = "Change User";
+            }
+        }
+
+        private async Task<IEnumerable<ModelResult>> GetMoreItems(uint count)
+        {
             RemixUserListResponse result;
 
             if (string.IsNullOrEmpty(continuationUri))
             {
-                // Clear the list before loading up a new one
-                if (Models.Any())
-                {
-                    Models.Clear();
-                }
-
-                result = await RemixApiService.Current.GetModelsForUserAsync(UserId);
+                result = await RemixApiService.Current.GetModelsForUserAsync(currentUserId);
             }
             else
             {
-                result = await RemixApiService.Current.GetModelsForUserAsync(UserId, continuationUri);
+                result = await RemixApiService.Current.GetModelsForUserAsync(currentUserId, continuationUri);
+            }
+
+            // No more items to get
+            if (string.IsNullOrEmpty(result.ContinuationUri))
+            {
+                return null;
             }
 
             continuationUri = result.ContinuationUri;
 
-            UserButtonText = "LOAD MORE...";
-
-            foreach (var item in result.Results)
-            {
-                Models.Add(item);
-            }
+            return result.Results;
         }
 
         public void Reset_OnClick(object sender, RoutedEventArgs e)
         {
-            Models.Clear();
+            Models = null;
             SelectedModels.Clear();
             continuationUri = string.Empty;
             BoardButtonText = "Get Board Models";
@@ -195,7 +205,7 @@ namespace RemixDownloader.Uwp.ViewModels
             {
                 foreach (ModelResult model in e.AddedItems)
                 {
-                    var item = SelectedModels.FirstOrDefault(p=>p.Model.Id == model.Id);
+                    var item = SelectedModels.FirstOrDefault(p => p.Model.Id == model.Id);
 
                     if (item == null)
                     {
