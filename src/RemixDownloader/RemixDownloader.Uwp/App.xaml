@@ -12,6 +12,7 @@
 
             <converters:FileSuffixConverter x:Key="FileSuffixConverter"/>
             <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+            <converters:ResultToBrushConverter x:Key="ResultToBrushConverter"/>
 
             <Style x:Key="StretchedListViewItemStyle"
                    TargetType="ListViewItem">
