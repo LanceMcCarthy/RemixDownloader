@@ -1,5 +1,4 @@
-﻿using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
+﻿using Windows.UI.Xaml.Controls;
 using RemixDownloader.Uwp.Common;
 using RemixDownloader.Uwp.Models;
 
@@ -15,7 +14,7 @@ namespace RemixDownloader.Uwp
 
         public void ScrollToItem(ModelResultViewModel item)
         {
-            ModelsListView.ScrollIntoView(item);
+            SelectedModelsListView.ScrollIntoView(item);
         }
     }
 }
