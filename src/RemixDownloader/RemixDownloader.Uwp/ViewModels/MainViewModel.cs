@@ -5,11 +5,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Storage;
+using Windows.Storage.AccessCache;
+using Windows.Storage.Pickers;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using CommonHelpers.Common;
-using CommonHelpers.Extensions;
 using RemixDownloader.Core.Models;
 using RemixDownloader.Core.Services;
 using RemixDownloader.Uwp.Common;
@@ -24,12 +26,14 @@ namespace RemixDownloader.Uwp.ViewModels
         private string continuationUri = string.Empty;
         private CancellationTokenSource cancellationTokenSource;
         private CancellationToken cancellationToken;
+        private StorageFolder preferredDownloadFolder;
         private string boardButtonText = "Get Board Models";
         private string userButtonText = "Get User Models";
         private string selectedOptimizationOption;
-
         private string boardId = "3T5ZY5WEWCn";
         private string userId = "46rbnCYv5fy";
+        private string downloadFolderName = "No Folder Selected";
+        private bool isReadyForDownload;
 
         public MainViewModel()
         {
@@ -83,6 +87,18 @@ namespace RemixDownloader.Uwp.ViewModels
         {
             get => userId;
             set => SetProperty(ref userId, value);
+        }
+
+        public string DownloadFolderName
+        {
+            get => downloadFolderName;
+            set => SetProperty(ref downloadFolderName, value);
+        }
+
+        public bool IsReadyForDownload
+        {
+            get => isReadyForDownload;
+            set => SetProperty(ref isReadyForDownload, value);
         }
 
         public IScrollToItem ItemScroller { get; set; }
@@ -156,7 +172,7 @@ namespace RemixDownloader.Uwp.ViewModels
 
             continuationUri = result.ContinuationUri;
 
-            UserButtonText = "load more...";
+            UserButtonText = "LOAD MORE...";
 
             foreach (var item in result.Results)
             {
@@ -200,26 +216,67 @@ namespace RemixDownloader.Uwp.ViewModels
                     }
                 }
             }
+
+            // Enable the download button if there is a selected folder
+            if (SelectedModels.Any())
+            {
+                IsReadyForDownload = preferredDownloadFolder != null;
+            }
+        }
+
+        public async void SelectTargetFolderButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            var folderPicker = new FolderPicker { SuggestedStartLocation = PickerLocationId.Downloads };
+            folderPicker.FileTypeFilter.Add("*");
+
+            var folder = await folderPicker.PickSingleFolderAsync();
+
+            if (folder != null)
+            {
+                StorageApplicationPermissions.FutureAccessList.AddOrReplace("PreferredDownloadFolderToken", folder);
+                StorageApplicationPermissions.MostRecentlyUsedList.AddOrReplace("PreferredDownloadFolderToken", folder);
+
+                preferredDownloadFolder = folder;
+                DownloadFolderName = $"Save To: {preferredDownloadFolder.Name}";
+            }
+            else
+            {
+                preferredDownloadFolder = null;
+                DownloadFolderName = "No Folder Selected";
+            }
+
+            // Enable the download button if there are models ready to download
+            if (SelectedModels.Any())
+            {
+                IsReadyForDownload = preferredDownloadFolder != null;
+            }
         }
 
         public async void Download_OnClick(object sender, RoutedEventArgs e)
         {
+            if(preferredDownloadFolder == null)
+            {
+                await new MessageDialog("Select a folder before downloading.").ShowAsync();
+                return;
+            }
+
             cancellationTokenSource = new CancellationTokenSource();
             cancellationToken = cancellationTokenSource.Token;
 
             var lod = (AssetOptimizationType)Enum.Parse(typeof(AssetOptimizationType), SelectedOptimizationOption);
 
-            await DownloadModelsAsync(lod);
+            await DownloadModelsAsync(lod, preferredDownloadFolder);
         }
 
         public void Cancel_OnClick(object sender, RoutedEventArgs e)
         {
             cancellationTokenSource.Cancel();
+
             IsBusy = false;
             IsBusyMessage = "Cancelled";
         }
 
-        private async Task DownloadModelsAsync(AssetOptimizationType levelOfDetail)
+        private async Task DownloadModelsAsync(AssetOptimizationType levelOfDetail, StorageFolder folder)
         {
             IsBusyMessage = "downloading model files...";
 
@@ -236,7 +293,7 @@ namespace RemixDownloader.Uwp.ViewModels
                     ItemScroller.ScrollToItem(item);
 
                     IsBusyMessage = $"Downloading {item.Model.Name}...";
-                    item.Status = "downloading...";
+                    item.Status = "Downloading...";
                     item.IsDownloading = true;
 
                     var bytes = await RemixApiService.Current.DownloadModelFilesAsync(item.Model, levelOfDetail, cancellationToken);
@@ -267,7 +324,13 @@ namespace RemixDownloader.Uwp.ViewModels
                     IsBusyMessage = $"Saving {item.Model.Name}...";
                     item.Status = "saving...";
 
-                    item.FilePath = await bytes.SaveToLocalFolderAsync($"{item.Model.Name}.{fileType}");
+                    var fileName = $"{item.Model.Name}_{levelOfDetail}.{fileType}";
+
+                    var file =  await folder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
+
+                    await FileIO.WriteBytesAsync(file, bytes);
+
+                    item.FilePath = file.Path;
 
                     item.IsSaved = true;
                     item.Status = "Saved";
@@ -279,7 +342,7 @@ namespace RemixDownloader.Uwp.ViewModels
                         item.IsDownloading = false;
                     }
 
-                    item.Status = $"{ex.Message}";
+                    item.Status = $"Failed";
                 }
             }
 
