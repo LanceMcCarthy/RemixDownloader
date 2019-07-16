@@ -125,7 +125,7 @@
             <StackPanel Grid.Column="0">
                 <TextBlock Text="Board ID:"/>
                 <TextBox x:Name="BoardIdTextBox"
-                         Text="{Binding BoardId}"/>
+                         Text="{Binding BoardId, Mode=TwoWay}"/>
             </StackPanel>
 
             <Button x:Name="GetBoardModelsButton"
@@ -147,7 +147,7 @@
             <StackPanel Grid.Column="3">
                 <TextBlock Text="User ID:"/>
                 <TextBox x:Name="UserIdTextBox"
-                         Text="{Binding UserId}"/>
+                         Text="{Binding UserId, Mode=TwoWay}"/>
             </StackPanel>
 
             <Button x:Name="GetUserModelsButton"
