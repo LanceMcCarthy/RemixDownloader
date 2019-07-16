@@ -122,13 +122,15 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0">
+            <StackPanel Grid.Column="0" 
+                        Visibility="Collapsed">
                 <TextBlock Text="Board ID:"/>
                 <TextBox x:Name="BoardIdTextBox"
                          Text="{Binding BoardId, Mode=TwoWay}"/>
             </StackPanel>
 
             <Button x:Name="GetBoardModelsButton"
+                    Visibility="Collapsed"
                     Content="{Binding BoardButtonText}"
                     Background="LightSeaGreen"
                     Foreground="White"
@@ -142,7 +144,8 @@
                        VerticalAlignment="Bottom"
                        HorizontalAlignment="Center"
                        Margin="10"
-                       Grid.Column="2"/>
+                       Grid.Column="2"
+                       Visibility="Collapsed"/>
 
             <StackPanel Grid.Column="3">
                 <TextBlock Text="User ID:"/>
