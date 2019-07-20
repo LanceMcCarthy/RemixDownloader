@@ -17,7 +17,8 @@ using RemixDownloader.Core.Services;
 using RemixDownloader.Uwp.Common;
 using RemixDownloader.Uwp.Models;
 using Telerik.Core.Data;
-using Telerik.UI.Xaml.Controls.Data.ListView;
+using System.Net.Http;
+using System.Net;
 
 namespace RemixDownloader.Uwp.ViewModels
 {
@@ -31,11 +32,13 @@ namespace RemixDownloader.Uwp.ViewModels
         private StorageFolder preferredDownloadFolder;
         private string boardButtonText = "Get Board Models";
         private string userButtonText = "Get User Models";
-        private string selectedOptimizationOption;
+        private List<string> selectedOptionalDownloads;
         private string boardId = "3T5ZY5WEWCn";
         private string userId = "46rbnCYv5fy";
-        private string downloadFolderName = "No Folder Selected";
+        private string downloadFolderName = "Select download folder:";
         private bool isReadyForDownload;
+
+        private HttpClient client;
 
         private string currentUserId;
 
@@ -46,7 +49,14 @@ namespace RemixDownloader.Uwp.ViewModels
             //    Models = SampleDataHelpers.GetDesignTimeUserDataAsync().Result;
             //}
 
-            SelectedOptimizationOption = ModelOptimizationOptions[1];
+            var handler = new HttpClientHandler();
+
+            if (handler.SupportsAutomaticDecompression)
+            {
+                handler.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+            }
+
+            client = new HttpClient(handler);
         }
 
         public ObservableCollection<ModelResultViewModel> SelectedModels
@@ -61,12 +71,10 @@ namespace RemixDownloader.Uwp.ViewModels
             set => SetProperty(ref models, value);
         }
 
-        public List<string> ModelOptimizationOptions { get; } = new List<string> { "OriginalView", "OriginalDownload", "Preview", "Performance", "Quality", "HoloLens", "WindowsMR" };
-
-        public string SelectedOptimizationOption
+        public List<string> SelectedOptionalDownloads
         {
-            get => selectedOptimizationOption;
-            set => SetProperty(ref selectedOptimizationOption, value);
+            get => selectedOptionalDownloads ?? (selectedOptionalDownloads = new List<string>());
+            set => SetProperty(ref selectedOptionalDownloads, value);
         }
 
         public string BoardButtonText
@@ -234,6 +242,32 @@ namespace RemixDownloader.Uwp.ViewModels
             }
         }
 
+        public void OptimizationCheckBox_Checked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            if(sender is CheckBox cb && cb.Tag != null)
+            {
+                var optimization = cb.Tag.ToString();
+
+                if (!SelectedOptionalDownloads.Contains(optimization))
+                {
+                    SelectedOptionalDownloads.Add(optimization);
+                }
+            }
+        }
+
+        public void OptimizationCheckBox_Unchecked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            if (sender is CheckBox cb && cb.Tag != null)
+            {
+                var optimization = cb.Tag.ToString();
+
+                if (SelectedOptionalDownloads.Contains(optimization))
+                {
+                    SelectedOptionalDownloads.Remove(optimization);
+                }
+            }
+        }
+
         public async void SelectTargetFolderButton_OnClick(object sender, RoutedEventArgs e)
         {
             var folderPicker = new FolderPicker { SuggestedStartLocation = PickerLocationId.Downloads };
@@ -273,9 +307,7 @@ namespace RemixDownloader.Uwp.ViewModels
             cancellationTokenSource = new CancellationTokenSource();
             cancellationToken = cancellationTokenSource.Token;
 
-            var lod = (AssetOptimizationType)Enum.Parse(typeof(AssetOptimizationType), SelectedOptimizationOption);
-
-            await DownloadModelsAsync(lod, preferredDownloadFolder);
+            await DownloadModelsAsync(preferredDownloadFolder);
         }
 
         public void Cancel_OnClick(object sender, RoutedEventArgs e)
@@ -286,8 +318,9 @@ namespace RemixDownloader.Uwp.ViewModels
             IsBusyMessage = "Cancelled";
         }
 
-        private async Task DownloadModelsAsync(AssetOptimizationType levelOfDetail, StorageFolder folder)
+        private async Task DownloadModelsAsync(StorageFolder folder)
         {
+            IsBusy = true;
             IsBusyMessage = "downloading model files...";
 
             foreach (var item in SelectedModels)
@@ -306,42 +339,103 @@ namespace RemixDownloader.Uwp.ViewModels
                     item.Status = "Downloading...";
                     item.IsDownloading = true;
 
-                    var bytes = await RemixApiService.Current.DownloadModelFilesAsync(item.Model, levelOfDetail, cancellationToken);
+                    // *** Phase 1 - Always downloading the original model file *** //
 
-                    item.IsDownloading = false;
+                    var downloadUrl = item.Model.ManifestUris.FirstOrDefault(u => u.Usage.ToLower() == "download")?.Uri;
 
-                    if (bytes == null)
+                    if (string.IsNullOrEmpty(downloadUrl))
                     {
-                        Debug.WriteLine($"{item.Model.Name} was not downloaded.");
+                        item.Status = "Failed";
                         continue;
                     }
 
-                    string fileType = string.Empty;
-
-                    if (levelOfDetail == AssetOptimizationType.OriginalView)
+                    using (var response = await client.GetAsync(downloadUrl))
                     {
-                        fileType = item.Model.ManifestUris.FirstOrDefault(u => u.Usage == "View")?.Format;
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var bytes = await response.Content.ReadAsByteArrayAsync();
+
+                            if (bytes == null)
+                            {
+                                Debug.WriteLine($"{item.Model.Name} was not downloaded.");
+                                continue;
+                            }
+
+                            IsBusyMessage = $"Saving {item.Model.Name}...";
+                            item.Status = "saving...";
+
+                            var fileType = item.Model.ManifestUris.FirstOrDefault(u => u.Usage == "Download")?.Format;
+
+                            var fileName = $"{item.Model.Name}.{fileType}";
+
+                            var file = await folder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
+
+                            await FileIO.WriteBytesAsync(file, bytes);
+
+                            item.FilePath = file.Path;
+                        }
                     }
-                    else if (levelOfDetail == AssetOptimizationType.OriginalDownload)
+
+                    // *** Phase 2 - if there are any optimized versions selected, download and save them as separate files*** //
+                    foreach (var optimization in SelectedOptionalDownloads)
                     {
-                        fileType = item.Model.ManifestUris.FirstOrDefault(u => u.Usage == "Download")?.Format;
+                        // Check cancellatin request again
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            break;
+                        }
+
+                        IsBusyMessage = $"Downloading {optimization} version of {item.Model.Name}...";
+
+                        // Get the enum of the optimization type
+                        var lod = (AssetOptimizationType)Enum.Parse(typeof(AssetOptimizationType), optimization);
+
+                        string extraDownloadUrl = item.Model.AssetUris.FirstOrDefault(u => u.OptimizationType == lod.ToString())?.Uri;
+
+                        if (string.IsNullOrEmpty(extraDownloadUrl))
+                        {
+                            continue;
+                        }
+
+                        using(var response = await client.GetAsync(extraDownloadUrl))
+                        {
+                            if (!response.IsSuccessStatusCode)
+                            {
+                                continue;
+                            }
+
+                            var extraFileBytes = await response.Content.ReadAsByteArrayAsync();
+
+                                // If this one failed, move on to next optimization
+                            if (extraFileBytes == null || extraFileBytes.Length == 0)
+                            {
+                                Debug.WriteLine($"{item.Model.Name} was not downloaded.");
+                                continue;
+                            }
+
+                            IsBusyMessage = $"Saving {item.Model.Name} for {optimization}...";
+                            item.Status = "saving...";
+
+                            // Get the file extension for that optimization type
+                            var extraFileType = item.Model.AssetUris.FirstOrDefault(u => u.OptimizationType == lod.ToString())?.Format;
+
+                            if (string.IsNullOrEmpty(extraFileType))
+                            {
+                                continue;
+                            }
+
+                            var extraFileName = $"{item.Model.Name} ({lod}).{extraFileType}";
+
+                            var extraFile = await folder.CreateFileAsync(extraFileName, CreationCollisionOption.ReplaceExisting);
+
+                            await FileIO.WriteBytesAsync(extraFile, extraFileBytes);
+                        }
+
+                        // download the file, pasing in the enum so that it uses the correct URL
+                        //var extraFileBytes = await RemixApiService.Current.DownloadModelFilesAsync(item.Model, lod, cancellationToken);
                     }
-                    else
-                    {
-                        fileType = item.Model.AssetUris.FirstOrDefault(u => u.OptimizationType == levelOfDetail.ToString())?.Format;
-                    }
 
-                    IsBusyMessage = $"Saving {item.Model.Name}...";
-                    item.Status = "saving...";
-
-                    var fileName = $"{item.Model.Name}_{levelOfDetail}.{fileType}";
-
-                    var file =  await folder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
-
-                    await FileIO.WriteBytesAsync(file, bytes);
-
-                    item.FilePath = file.Path;
-
+                    item.IsDownloading = false;
                     item.IsSaved = true;
                     item.Status = "Saved";
                 }
@@ -352,7 +446,7 @@ namespace RemixDownloader.Uwp.ViewModels
                         item.IsDownloading = false;
                     }
 
-                    item.Status = $"Failed";
+                    item.Status = $"Failed - {ex.Message}";
                 }
             }
 

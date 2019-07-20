@@ -31,11 +31,10 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Column="0"
-                    BorderBrush="{ThemeResource ApplicationForegroundThemeBrush}"
-                    BorderThickness="0,0,0,1"
-                    Background="AntiqueWhite">
+                    Background="{ThemeResource AppBarBackgroundThemeBrush}">
                 <TextBlock Text="Available Models"
                            HorizontalAlignment="Center"
+                           Foreground="{ThemeResource AppBarItemForegroundThemeBrush}"
                            Style="{ThemeResource TitleTextBlockStyle}" />
             </Border>
 
@@ -157,13 +156,12 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Border Background="AntiqueWhite"
-                    BorderBrush="{ThemeResource ApplicationForegroundThemeBrush}"
-                    BorderThickness="0,0,0,1"
+            <Border Background="{ThemeResource AppBarBackgroundThemeBrush}"
                     Grid.Row="0"
                     Grid.Column="2">
                 <TextBlock Text="Selected Models"
                            HorizontalAlignment="Center"
+                           Foreground="{ThemeResource AppBarItemForegroundThemeBrush}"
                            Style="{ThemeResource TitleTextBlockStyle}" />
             </Border>
 
@@ -175,7 +173,7 @@
                       Grid.Row="1">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <Grid Background="DarkSlateGray">
+                        <Grid Background="{ThemeResource SystemControlAccentAcrylicElementAccentMediumHighBrush}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition />
@@ -214,9 +212,11 @@
 
             <Grid x:Name="DownloadSettingsPanel"
                   Background="WhiteSmoke"
+                  Padding="10"
                   Grid.Column="1"
                   Grid.Row="2">
                 <Grid.RowDefinitions>
+                    <RowDefinition />
                     <RowDefinition />
                     <RowDefinition />
                 </Grid.RowDefinitions>
@@ -225,38 +225,82 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
 
-                <ComboBox x:Name="LevelOfDetailComboBox"
-                          Header="Level of Detail"
-                          ItemsSource="{Binding ModelOptimizationOptions}"
-                          SelectedItem="{Binding SelectedOptimizationOption, Mode=TwoWay}"
-                          SelectedIndex="1"
-                          VerticalAlignment="Bottom"
-                          HorizontalAlignment="Stretch"
-                          Margin="10,5,5,0"
-                          Grid.Column="0" />
+                <TextBlock Text="Add optimized versions:"
+                           VerticalAlignment="Bottom"
+                           Grid.Column="0" />
 
-                <!--<Button Content="Choose Level of Detail">
+                <Button Content="Choose Extras"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBoolConverter}}"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Stretch"
+                        Margin="0,5,5,0"
+                        Grid.Column="0"
+                        Grid.Row="1">
                     <Button.Flyout>
-                        <Flyout>
-                            
+                        <Flyout LightDismissOverlayMode="On">
+                            <StackPanel Width="400"
+                                        Padding="10"
+                                        Spacing="10"
+                                        VerticalAlignment="Center"
+                                        Grid.Row="1"
+                                        Background="{ThemeResource SystemControlAcrylicElementBrush}">
+                                <StackPanel.Resources>
+                                    <Style TargetType="CheckBox">
+                                        <Setter Property="Margin"
+                                                Value="5,0" />
+                                        <Setter Property="IsChecked"
+                                                Value="False" />
+                                        <Setter Property="IsThreeState"
+                                                Value="False" />
+                                    </Style>
+                                </StackPanel.Resources>
+                                <TextBlock Text="Optimized Level of Detail"
+                                           Style="{ThemeResource TitleTextBlockStyle}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="In addition to the original model file, optimized verisons are also available. All selections will be saved in addition to the original."
+                                           HorizontalAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,10" />
+                                <TextBlock Text="Select downloads"
+                                           Foreground="{ThemeResource SystemAccentColor}" />
+                                <CheckBox Tag="Preview"
+                                          Content="Preview"
+                                          Checked="{x:Bind ViewModel.OptimizationCheckBox_Checked}"
+                                          Unchecked="{x:Bind ViewModel.OptimizationCheckBox_Unchecked}" />
+                                <CheckBox Tag="Performance"
+                                          Content="Performance"
+                                          Checked="{x:Bind ViewModel.OptimizationCheckBox_Checked}"
+                                          Unchecked="{x:Bind ViewModel.OptimizationCheckBox_Unchecked}" />
+                                <CheckBox Tag="Quality"
+                                          Content="Quality"
+                                          Checked="{x:Bind ViewModel.OptimizationCheckBox_Checked}"
+                                          Unchecked="{x:Bind ViewModel.OptimizationCheckBox_Unchecked}" />
+                                <CheckBox Tag="HoloLens"
+                                          Content="HoloLens (converted to glb)"
+                                          Checked="{x:Bind ViewModel.OptimizationCheckBox_Checked}"
+                                          Unchecked="{x:Bind ViewModel.OptimizationCheckBox_Unchecked}" />
+                                <CheckBox Tag="WindowsMR"
+                                          Content="Windows Mixed Reality (converted to glb)"
+                                          Checked="{x:Bind ViewModel.OptimizationCheckBox_Checked}"
+                                          Unchecked="{x:Bind ViewModel.OptimizationCheckBox_Unchecked}" />
+                            </StackPanel>
                         </Flyout>
                     </Button.Flyout>
-                </Button>-->
+                </Button>
 
-                <StackPanel Grid.Column="1"
-                            Margin="5,0,10,0"
-                            VerticalAlignment="Bottom">
+                <TextBlock Text="{Binding DownloadFolderName}"
+                           VerticalAlignment="Bottom"
+                           Margin="0,0,0,0"
+                           Grid.Column="1" />
 
-                    <TextBlock Text="{Binding DownloadFolderName}"
-                               VerticalAlignment="Bottom"
-                               Margin="0,0,0,5" />
-
-                    <Button x:Name="SelectTargetFolderButton"
-                            Content="Choose Folder"
-                            VerticalAlignment="Bottom"
-                            HorizontalAlignment="Stretch"
-                            Click="{x:Bind ViewModel.SelectTargetFolderButton_OnClick}" />
-                </StackPanel>
+                <Button x:Name="SelectTargetFolderButton"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBoolConverter}}"
+                        Content="Choose Folder"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Stretch"
+                        Click="{x:Bind ViewModel.SelectTargetFolderButton_OnClick}"
+                        Grid.Column="1"
+                        Grid.Row="1" />
 
                 <Button x:Name="DownloadButton"
                         Content="Start Download"
@@ -265,36 +309,36 @@
                         Background="DarkGoldenrod"
                         Foreground="White"
                         Grid.ColumnSpan="2"
-                        Grid.Row="1"
+                        Grid.Row="2"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Bottom"
-                        Margin="10" />
+                        Margin="0,10,0,0" />
             </Grid>
         </Grid>
-        
-        <Grid x:Name="BusyOverlayGrid"
-              Visibility="{Binding IsBusy}"
-              Grid.Row="1"
-              Grid.RowSpan="2"
-              Grid.Column="0"
-              Grid.ColumnSpan="2"
-              Background="#AAFFFFFF">
-            <StackPanel HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Spacing="20">
-                <primitives:RadBusyIndicator x:Name="BusyIndicator"
-                                             Width="100"
-                                             Height="100"
-                                             Content="{Binding IsBusyMessage}"
-                                             IsActive="{Binding IsBusy}"
-                                             AnimationStyle="AnimationStyle5" />
-                <Button x:Name="CancelDownloadButton"
-                        Content="Cancel"
-                        Background="DarkRed"
-                        Foreground="White"
-                        HorizontalAlignment="Stretch"
-                        Click="{x:Bind ViewModel.Cancel_OnClick}" />
-            </StackPanel>
-        </Grid>
+
+        <primitives:RadBusyIndicator x:Name="BusyIndicator"
+                                     IsActive="{Binding IsBusy}"
+                                     AnimationStyle="AnimationStyle5"
+                                     Grid.Row="1"
+                                     Grid.RowSpan="2"
+                                     Grid.Column="0"
+                                     Grid.ColumnSpan="3"
+                                     Background="#AAFFFFFF"
+                                     VerticalAlignment="Stretch"
+                                     HorizontalAlignment="Stretch"
+                                     HorizontalContentAlignment="Center"
+                                     VerticalContentAlignment="Center">
+            <primitives:RadBusyIndicator.Content>
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="20">
+                    <TextBlock Text="{Binding IsBusyMessage}" />
+                    <Button x:Name="CancelDownloadButton"
+                            Content="Cancel"
+                            HorizontalAlignment="Center"
+                            Click="{x:Bind ViewModel.Cancel_OnClick}" />
+                </StackPanel>
+            </primitives:RadBusyIndicator.Content>
+        </primitives:RadBusyIndicator>
     </Grid>
 </Page>
