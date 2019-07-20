@@ -11,17 +11,19 @@ namespace RemixDownloader.Uwp.Converters
         {
             if (value is string status)
             {
-                if (status == "Downloading...")
+                var lowerStatus = status.ToLower();
+
+                if (lowerStatus.Contains("downloading") || lowerStatus.Contains("saving"))
                 {
                     return new SolidColorBrush(Colors.Goldenrod);
                 }
 
-                if (status == "Saved")
+                if (lowerStatus.Contains("saved"))
                 {
                     return new SolidColorBrush(Colors.MediumSeaGreen);
                 }
 
-                if (status == "Failed")
+                if (lowerStatus.Contains("failed"))
                 {
                     return new SolidColorBrush(Colors.DarkRed);
                 }

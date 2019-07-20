@@ -113,35 +113,36 @@ namespace RemixDownloader.Core.Services
         ///  <param name="levelOfDetail">Level of detail requested in the downloaded model</param>
         ///  <param name="cancellationToken">Cancels operation and returns null</param>
         ///  <returns></returns>
-        public async Task<byte[]> DownloadModelFilesAsync(ModelResult model, AssetOptimizationType levelOfDetail, CancellationToken cancellationToken = new CancellationToken())
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return null;
-            }
+        // TODO Determine reason why extra asset files are not downloading, then move downloading logic out of the viewmodel and back here.
+        //public async Task<byte[]> DownloadModelFilesAsync(ModelResult model, AssetOptimizationType levelOfDetail, CancellationToken cancellationToken = new CancellationToken())
+        //{
+        //    if (cancellationToken.IsCancellationRequested)
+        //    {
+        //        return null;
+        //    }
 
-            string downloadUrl = string.Empty;
+        //    string downloadUrl = string.Empty;
 
-            if (levelOfDetail == AssetOptimizationType.OriginalView)
-            {
-                downloadUrl = model.ManifestUris.FirstOrDefault(u => u.Usage == "View")?.Uri;
-            }
-            else if (levelOfDetail == AssetOptimizationType.OriginalDownload)
-            {
-                downloadUrl = model.ManifestUris.FirstOrDefault(u => u.Usage == "Download")?.Uri;
-            }
-            else
-            {
-                downloadUrl = model.AssetUris.FirstOrDefault(u => u.OptimizationType == levelOfDetail.ToString())?.Uri;
-            }
+        //    if (levelOfDetail == AssetOptimizationType.ManifestView)
+        //    {
+        //        downloadUrl = model.ManifestUris.FirstOrDefault(u => u.Usage == "View")?.Uri;
+        //    }
+        //    else if (levelOfDetail == AssetOptimizationType.ManifestDownload)
+        //    {
+        //        downloadUrl = model.ManifestUris.FirstOrDefault(u => u.Usage == "Download")?.Uri;
+        //    }
+        //    else
+        //    {
+        //        downloadUrl = model.AssetUris.FirstOrDefault(u => u.OptimizationType == levelOfDetail.ToString())?.Uri;
+        //    }
 
-            if (string.IsNullOrEmpty(downloadUrl))
-            {
-                return null;
-            }
+        //    if (string.IsNullOrEmpty(downloadUrl))
+        //    {
+        //        return null;
+        //    }
 
-            return await client.GetByteArrayAsync(downloadUrl);
-        }
+        //    return await client.GetByteArrayAsync(downloadUrl);
+        //}
 
         public void Dispose()
         {

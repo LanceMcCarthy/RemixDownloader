@@ -7,8 +7,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:primitives="using:Telerik.UI.Xaml.Controls.Primitives"
       xmlns:viewModels="using:RemixDownloader.Uwp.ViewModels"
-      xmlns:data="using:Telerik.UI.Xaml.Controls.Data"
-      xmlns:listView="using:Telerik.UI.Xaml.Controls.Data.ListView"
+      xmlns:toolkit="using:Microsoft.Toolkit.Uwp.UI.Controls"
       mc:Ignorable="d"
       Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
       RequestedTheme="Light">
@@ -18,251 +17,328 @@
     </Page.DataContext>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="1*" />
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0"
-                BorderBrush="{ThemeResource ApplicationForegroundThemeBrush}"
-                BorderThickness="0,0,0,1"
-                Background="AntiqueWhite">
-            <TextBlock Text="Available Models"
-                       HorizontalAlignment="Center"
-                       Style="{ThemeResource TitleTextBlockStyle}" />
-        </Border>
+        <Grid x:Name="LeftGrid">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <Border Background="AntiqueWhite"
-                BorderBrush="{ThemeResource ApplicationForegroundThemeBrush}"
-                BorderThickness="0,0,0,1"
-                Grid.Row="0"
-                Grid.Column="2">
-            <TextBlock Text="Selected Models"
-                       HorizontalAlignment="Center"
-                       Style="{ThemeResource TitleTextBlockStyle}" />
-        </Border>
+            <Border Grid.Column="0"
+                    Background="{ThemeResource AppBarBackgroundThemeBrush}">
+                <TextBlock Text="Available Models"
+                           HorizontalAlignment="Center"
+                           Foreground="{ThemeResource AppBarItemForegroundThemeBrush}"
+                           Style="{ThemeResource TitleTextBlockStyle}" />
+            </Border>
 
-        <GridView x:Name="ModelsGridView"
-                  ItemsSource="{Binding Models}"
-                  SelectionChanged="{x:Bind ViewModel.ModelsGridView_OnSelectionChanged}"
-                  SelectionMode="Extended"
-                  IsMultiSelectCheckBoxEnabled="True"
-                  Grid.Row="1"
-                  Grid.Column="0">
-            <GridView.ItemTemplate>
-                <DataTemplate>
-                    <Grid>
-                        <Image Source="{Binding PreviewImage.Source}"
-                               Width="150"
-                               Height="150" />
-                        <StackPanel Background="#DDFFFFFF"
-                                    VerticalAlignment="Bottom"
-                                    Padding="10,5">
-                            <TextBlock Text="{Binding Name}"
-                                       FontWeight="Bold" />
-                            <TextBlock Text="{Binding FileSize, Converter={StaticResource FileSuffixConverter}}" />
-                        </StackPanel>
-                    </Grid>
-                </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
+            <GridView x:Name="ModelsGridView"
+                      ItemsSource="{Binding Models}"
+                      SelectionChanged="{x:Bind ViewModel.ModelsGridView_OnSelectionChanged}"
+                      SelectionMode="Extended"
+                      IsMultiSelectCheckBoxEnabled="True"
+                      Grid.Row="1"
+                      Grid.Column="0">
+                <GridView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Image Source="{Binding PreviewImage.Source}"
+                                   Width="150"
+                                   Height="150" />
+                            <StackPanel Background="#DDFFFFFF"
+                                        VerticalAlignment="Bottom"
+                                        Padding="10,5">
+                                <TextBlock Text="{Binding Name}"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="{Binding FileSize, Converter={StaticResource FileSuffixConverter}}" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
 
-        <ListView x:Name="SelectedModelsListView"
-                  ItemsSource="{Binding SelectedModels}"
-                  ItemContainerStyle="{StaticResource StretchedListViewItemStyle}"
-                  SelectionMode="None"
-                  Grid.Column="2"
-                  Grid.Row="1">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Grid Background="DarkSlateGray">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Image Source="{Binding Model.PreviewImage.Source}"
-                               Stretch="Fill"
-                               HorizontalAlignment="Stretch" />
-                        <Border Background="#DDFFFFFF"
-                                VerticalAlignment="Top"
-                                Grid.Column="1"
-                                Padding="10,5">
-                            <TextBlock Text="{Binding Model.Name}"
-                                       FontWeight="Bold" />
-                        </Border>
+            <Grid x:Name="UserIdGrid"
+                  Background="WhiteSmoke"
+                  Grid.Row="2"
+                  Grid.Column="0"
+                  ColumnSpacing="10"
+                  Padding="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                        <Border Background="{Binding Status, Converter={StaticResource ResultToBrushConverter}}"
-                                Visibility="{Binding Status, Converter={StaticResource NullToVisibilityConverter}}"
-                                VerticalAlignment="Bottom"
-                                Grid.Column="1"
-                                Padding="10,5">
-                            <TextBlock Text="{Binding Status}"
-                                       Foreground="White"
-                                       TextWrapping="Wrap" />
-                        </Border>
+                <StackPanel Grid.Column="0"
+                            Visibility="Collapsed">
+                    <TextBlock Text="Board ID:" />
+                    <TextBox x:Name="BoardIdTextBox"
+                             Text="{Binding BoardId, Mode=TwoWay}" />
+                </StackPanel>
 
-                        <TextBlock Text="{Binding Model.FileSize, Converter={StaticResource FileSuffixConverter}}"
-                                   VerticalAlignment="Bottom"
-                                   HorizontalAlignment="Right"
-                                   Grid.Column="1"
-                                   Foreground="#DDFFFFFF"
-                                   Margin="5" />
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+                <Button x:Name="GetBoardModelsButton"
+                        Visibility="Collapsed"
+                        Content="{Binding BoardButtonText}"
+                        Background="LightSeaGreen"
+                        Foreground="White"
+                        Click="{x:Bind ViewModel.LoadBoardModels_OnClick}"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Stretch"
+                        Grid.Column="1" />
 
-        <Grid Background="WhiteSmoke"
-              Grid.Row="2"
-              Grid.Column="0"
-              ColumnSpacing="10"
-              Padding="10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+                <TextBlock Text="OR"
+                           FontWeight="Bold"
+                           VerticalAlignment="Bottom"
+                           HorizontalAlignment="Center"
+                           Margin="10"
+                           Grid.Column="2"
+                           Visibility="Collapsed" />
 
-            <StackPanel Grid.Column="0"
-                        Visibility="Collapsed">
-                <TextBlock Text="Board ID:" />
-                <TextBox x:Name="BoardIdTextBox"
-                         Text="{Binding BoardId, Mode=TwoWay}" />
-            </StackPanel>
+                <StackPanel VerticalAlignment="Bottom"
+                            Grid.Column="3">
+                    <TextBlock Text="User ID:" />
+                    <TextBox x:Name="UserIdTextBox"
+                             Text="{Binding UserId, Mode=TwoWay}" />
+                </StackPanel>
 
-            <Button x:Name="GetBoardModelsButton"
-                    Visibility="Collapsed"
-                    Content="{Binding BoardButtonText}"
-                    Background="LightSeaGreen"
-                    Foreground="White"
-                    Click="{x:Bind ViewModel.LoadBoardModels_OnClick}"
-                    VerticalAlignment="Bottom"
-                    HorizontalAlignment="Stretch"
-                    Grid.Column="1" />
+                <Button x:Name="GetUserModelsButton"
+                        Content="{Binding UserButtonText}"
+                        Background="MediumSlateBlue"
+                        Foreground="White"
+                        Click="{x:Bind ViewModel.LoadUserModels_OnClick}"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Stretch"
+                        Grid.Column="4"
+                        Margin="0,0,10,0" />
 
-            <TextBlock Text="OR"
-                       FontWeight="Bold"
-                       VerticalAlignment="Bottom"
-                       HorizontalAlignment="Center"
-                       Margin="10"
-                       Grid.Column="2"
-                       Visibility="Collapsed" />
-
-            <StackPanel VerticalAlignment="Bottom"
-                        Grid.Column="3">
-                <TextBlock Text="User ID:" />
-                <TextBox x:Name="UserIdTextBox"
-                         Text="{Binding UserId, Mode=TwoWay}" />
-            </StackPanel>
-
-            <Button x:Name="GetUserModelsButton"
-                    Content="{Binding UserButtonText}"
-                    Background="MediumSlateBlue"
-                    Foreground="White"
-                    Click="{x:Bind ViewModel.LoadUserModels_OnClick}"
-                    VerticalAlignment="Bottom"
-                    HorizontalAlignment="Stretch"
-                    Grid.Column="4"
-                    Margin="0,0,10,0" />
-
-            <Button Content="Reset"
-                    Foreground="White"
-                    Background="DarkRed"
-                    Click="{x:Bind ViewModel.Reset_OnClick}"
-                    VerticalAlignment="Bottom"
-                    HorizontalAlignment="Stretch"
-                    Grid.Column="5" />
+                <Button Content="Reset"
+                        Foreground="White"
+                        Background="DarkRed"
+                        Click="{x:Bind ViewModel.Reset_OnClick}"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Stretch"
+                        Grid.Column="5" />
+            </Grid>
         </Grid>
 
-        <Grid x:Name="DownloadSettingsPanel"
-              Background="WhiteSmoke"
-              Grid.Column="2"
-              Grid.Row="2">
+        <toolkit:GridSplitter ResizeBehavior="PreviousAndNext"
+                              ResizeDirection="Columns"
+                              Background="Gray"
+                              Foreground="White"
+                              FontSize="13"
+                              Grid.Column="1">
+            <toolkit:GridSplitter.Element>
+                <Grid>
+                    <TextBlock HorizontalAlignment="Center"
+                               IsHitTestVisible="False"
+                               VerticalAlignment="Center"
+                               Text="&#xE784;"
+                               Foreground="white"
+                               FontFamily="Segoe MDL2 Assets" />
+                </Grid>
+            </toolkit:GridSplitter.Element>
+        </toolkit:GridSplitter>
+
+        <Grid x:Name="RightGrid"
+              Grid.Column="2">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition />
-                <RowDefinition />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
 
-            <ComboBox x:Name="LevelOfDetailComboBox"
-                      Header="Level of Detail"
-                      ItemsSource="{Binding ModelOptimizationOptions}"
-                      SelectedItem="{Binding SelectedOptimizationOption, Mode=TwoWay}"
-                      SelectedIndex="1"
-                      VerticalAlignment="Bottom"
-                      HorizontalAlignment="Stretch"
-                      Margin="10,5,5,0"
-                      Grid.Column="0" />
+            <Border Background="{ThemeResource AppBarBackgroundThemeBrush}"
+                    Grid.Row="0"
+                    Grid.Column="2">
+                <TextBlock Text="Selected Models"
+                           HorizontalAlignment="Center"
+                           Foreground="{ThemeResource AppBarItemForegroundThemeBrush}"
+                           Style="{ThemeResource TitleTextBlockStyle}" />
+            </Border>
 
-            <StackPanel Grid.Column="1"
-                        Margin="5,0,10,0"
-                        VerticalAlignment="Bottom">
+            <ListView x:Name="SelectedModelsListView"
+                      ItemsSource="{Binding SelectedModels}"
+                      ItemContainerStyle="{StaticResource StretchedListViewItemStyle}"
+                      SelectionMode="None"
+                      Grid.Column="1"
+                      Grid.Row="1">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Background="{ThemeResource SystemControlAccentAcrylicElementAccentMediumHighBrush}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Image Source="{Binding Model.PreviewImage.Source}"
+                                   Stretch="Fill"
+                                   HorizontalAlignment="Stretch" />
+                            <Border Background="#DDFFFFFF"
+                                    VerticalAlignment="Top"
+                                    Grid.Column="1"
+                                    Padding="10,5">
+                                <TextBlock Text="{Binding Model.Name}"
+                                           FontWeight="Bold" />
+                            </Border>
+
+                            <Border Background="{Binding Status, Converter={StaticResource ResultToBrushConverter}}"
+                                    Visibility="{Binding Status, Converter={StaticResource NullToVisibilityConverter}}"
+                                    VerticalAlignment="Bottom"
+                                    Grid.Column="1"
+                                    Padding="10,5">
+                                <TextBlock Text="{Binding Status}"
+                                           Foreground="White"
+                                           TextWrapping="Wrap" />
+                            </Border>
+
+                            <TextBlock Text="{Binding Model.FileSize, Converter={StaticResource FileSuffixConverter}}"
+                                       VerticalAlignment="Bottom"
+                                       HorizontalAlignment="Right"
+                                       Grid.Column="1"
+                                       Foreground="#DDFFFFFF"
+                                       Margin="5" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <Grid x:Name="DownloadSettingsPanel"
+                  Background="WhiteSmoke"
+                  Padding="10"
+                  Grid.Column="1"
+                  Grid.Row="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="Add optimized versions:"
+                           VerticalAlignment="Bottom"
+                           Grid.Column="0" />
+
+                <Button Content="Choose Extras"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBoolConverter}}"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Stretch"
+                        Margin="0,5,5,0"
+                        Grid.Column="0"
+                        Grid.Row="1">
+                    <Button.Flyout>
+                        <Flyout LightDismissOverlayMode="On">
+                            <StackPanel Width="400"
+                                        Padding="10"
+                                        Spacing="10"
+                                        VerticalAlignment="Center"
+                                        Grid.Row="1"
+                                        Background="{ThemeResource SystemControlAcrylicElementBrush}">
+                                <StackPanel.Resources>
+                                    <Style TargetType="CheckBox">
+                                        <Setter Property="Margin"
+                                                Value="5,0" />
+                                        <Setter Property="IsChecked"
+                                                Value="False" />
+                                        <Setter Property="IsThreeState"
+                                                Value="False" />
+                                    </Style>
+                                </StackPanel.Resources>
+                                <TextBlock Text="Optimized Level of Detail"
+                                           Style="{ThemeResource TitleTextBlockStyle}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="In addition to the original model file, optimized verisons are also available. All selections will be saved in addition to the original."
+                                           HorizontalAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,10" />
+                                <TextBlock Text="Select downloads"
+                                           Foreground="{ThemeResource SystemAccentColor}" />
+                                <CheckBox Tag="Preview"
+                                          Content="Preview"
+                                          Checked="{x:Bind ViewModel.OptimizationCheckBox_Checked}"
+                                          Unchecked="{x:Bind ViewModel.OptimizationCheckBox_Unchecked}" />
+                                <CheckBox Tag="Performance"
+                                          Content="Performance"
+                                          Checked="{x:Bind ViewModel.OptimizationCheckBox_Checked}"
+                                          Unchecked="{x:Bind ViewModel.OptimizationCheckBox_Unchecked}" />
+                                <CheckBox Tag="Quality"
+                                          Content="Quality"
+                                          Checked="{x:Bind ViewModel.OptimizationCheckBox_Checked}"
+                                          Unchecked="{x:Bind ViewModel.OptimizationCheckBox_Unchecked}" />
+                                <CheckBox Tag="HoloLens"
+                                          Content="HoloLens (converted to glb)"
+                                          Checked="{x:Bind ViewModel.OptimizationCheckBox_Checked}"
+                                          Unchecked="{x:Bind ViewModel.OptimizationCheckBox_Unchecked}" />
+                                <CheckBox Tag="WindowsMR"
+                                          Content="Windows Mixed Reality (converted to glb)"
+                                          Checked="{x:Bind ViewModel.OptimizationCheckBox_Checked}"
+                                          Unchecked="{x:Bind ViewModel.OptimizationCheckBox_Unchecked}" />
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
 
                 <TextBlock Text="{Binding DownloadFolderName}"
                            VerticalAlignment="Bottom"
-                           Margin="0,0,0,5" />
+                           Margin="0,0,0,0"
+                           Grid.Column="1" />
 
                 <Button x:Name="SelectTargetFolderButton"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBoolConverter}}"
                         Content="Choose Folder"
                         VerticalAlignment="Bottom"
                         HorizontalAlignment="Stretch"
-                        Click="{x:Bind ViewModel.SelectTargetFolderButton_OnClick}" />
-            </StackPanel>
+                        Click="{x:Bind ViewModel.SelectTargetFolderButton_OnClick}"
+                        Grid.Column="1"
+                        Grid.Row="1" />
 
-            <Button x:Name="DownloadButton"
-                    Content="Start Download"
-                    IsEnabled="{Binding IsReadyForDownload}"
-                    Click="{x:Bind ViewModel.Download_OnClick}"
-                    Background="DarkGoldenrod"
-                    Foreground="White"
-                    Grid.ColumnSpan="2"
-                    Grid.Row="1"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Bottom"
-                    Margin="10" />
-        </Grid>
-
-        <Rectangle Fill="{ThemeResource ApplicationForegroundThemeBrush}"
-                   Width="1"
-                   Grid.Column="1"
-                   Grid.Row="0"
-                   Grid.RowSpan="3" />
-
-        <Grid x:Name="BusyOverlayGrid"
-              Visibility="{Binding IsBusy}"
-              Grid.Row="1"
-              Grid.RowSpan="2"
-              Grid.Column="0"
-              Grid.ColumnSpan="3"
-              Background="#AAFFFFFF">
-            <StackPanel HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Spacing="20">
-                <primitives:RadBusyIndicator x:Name="BusyIndicator"
-                                             Width="100"
-                                             Height="100"
-                                             Content="{Binding IsBusyMessage}"
-                                             IsActive="{Binding IsBusy}"
-                                             AnimationStyle="AnimationStyle5" />
-                <Button x:Name="CancelDownloadButton"
-                        Content="Cancel"
-                        Background="DarkRed"
+                <Button x:Name="DownloadButton"
+                        Content="Start Download"
+                        IsEnabled="{Binding IsReadyForDownload}"
+                        Click="{x:Bind ViewModel.Download_OnClick}"
+                        Background="DarkGoldenrod"
                         Foreground="White"
+                        Grid.ColumnSpan="2"
+                        Grid.Row="2"
                         HorizontalAlignment="Stretch"
-                        Click="{x:Bind ViewModel.Cancel_OnClick}" />
-            </StackPanel>
+                        VerticalAlignment="Bottom"
+                        Margin="0,10,0,0" />
+            </Grid>
         </Grid>
+
+        <primitives:RadBusyIndicator x:Name="BusyIndicator"
+                                     IsActive="{Binding IsBusy}"
+                                     AnimationStyle="AnimationStyle5"
+                                     Grid.Row="1"
+                                     Grid.RowSpan="2"
+                                     Grid.Column="0"
+                                     Grid.ColumnSpan="3"
+                                     Background="#AAFFFFFF"
+                                     VerticalAlignment="Stretch"
+                                     HorizontalAlignment="Stretch"
+                                     HorizontalContentAlignment="Center"
+                                     VerticalContentAlignment="Center">
+            <primitives:RadBusyIndicator.Content>
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="20">
+                    <TextBlock Text="{Binding IsBusyMessage}" />
+                    <Button x:Name="CancelDownloadButton"
+                            Content="Cancel"
+                            HorizontalAlignment="Center"
+                            Click="{x:Bind ViewModel.Cancel_OnClick}" />
+                </StackPanel>
+            </primitives:RadBusyIndicator.Content>
+        </primitives:RadBusyIndicator>
     </Grid>
 </Page>
