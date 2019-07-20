@@ -318,7 +318,7 @@ namespace RemixDownloader.Uwp.ViewModels
 
                     string fileType = string.Empty;
 
-                    if (levelOfDetail == AssetOptimizationType.OriginalView || levelOfDetail == AssetOptimizationType.OriginalDownload)
+                    if (levelOfDetail == AssetOptimizationType.OriginalView)
                     {
                         fileType = item.Model.ManifestUris.FirstOrDefault(u => u.Usage == "View")?.Format;
                     }
