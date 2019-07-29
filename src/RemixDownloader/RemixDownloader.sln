@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.29102.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemixDownloader.Uwp", "RemixDownloader.Uwp\RemixDownloader.Uwp.csproj", "{D66A9A47-57E6-4A1F-99C0-77D5511ECC6A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemixDownloader.Core", "RemixDownloader.Core\RemixDownloader.Core.csproj", "{63829EFD-10DE-41F5-AE14-A588FA47C51A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemixDownloader.Core", "RemixDownloader.Core\RemixDownloader.Core.csproj", "{63829EFD-10DE-41F5-AE14-A588FA47C51A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemixDownloader.Console", "RemixDownloader.Console\RemixDownloader.Console.csproj", "{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,6 +69,26 @@ Global
 		{63829EFD-10DE-41F5-AE14-A588FA47C51A}.Release|x64.Build.0 = Release|Any CPU
 		{63829EFD-10DE-41F5-AE14-A588FA47C51A}.Release|x86.ActiveCfg = Release|Any CPU
 		{63829EFD-10DE-41F5-AE14-A588FA47C51A}.Release|x86.Build.0 = Release|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Debug|ARM.Build.0 = Debug|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Debug|x64.Build.0 = Debug|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Debug|x86.Build.0 = Debug|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Release|ARM.ActiveCfg = Release|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Release|ARM.Build.0 = Release|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Release|ARM64.Build.0 = Release|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Release|x64.ActiveCfg = Release|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Release|x64.Build.0 = Release|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Release|x86.ActiveCfg = Release|Any CPU
+		{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

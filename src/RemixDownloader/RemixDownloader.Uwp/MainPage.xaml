@@ -110,15 +110,29 @@
                              Text="{Binding UserId, Mode=TwoWay}" />
                 </StackPanel>
 
-                <Button x:Name="GetUserModelsButton"
-                        Content="{Binding UserButtonText}"
-                        Background="MediumSlateBlue"
-                        Foreground="White"
-                        Click="{x:Bind ViewModel.LoadUserModels_OnClick}"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Stretch"
-                        Grid.Column="4"
-                        Margin="0,0,10,0" />
+                <StackPanel Orientation="Horizontal" Grid.Column="4">
+                    <Button x:Name="GetUserModelsButton"
+                            Content="{Binding UserButtonText}"
+                            Background="MediumSlateBlue"
+                            Foreground="White"
+                            Click="{x:Bind ViewModel.LoadUserModels_OnClick}"
+                            VerticalAlignment="Bottom"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,0,10,0" />
+
+                    <!-- UNDER DEVELOPMENT: Will be completed shortly
+                    <Button x:Name="DownloadAllUserModelsButton"
+                            Content="{Binding DownloadAllUserModelsButtonText}"
+                            IsEnabled="{Binding IsDownloadAllButtonEnabled}"
+                            BorderBrush="DarkGreen"
+                            Background="LightGreen"
+                            Foreground="DarkGreen"
+                            BorderThickness="2"
+                            Click="{x:Bind ViewModel.DownloadAllUserModels_OnClick}"
+                            VerticalAlignment="Bottom"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,0,10,0" />-->
+                </StackPanel>
 
                 <Button Content="Reset"
                         Foreground="White"
@@ -262,7 +276,7 @@
                                            TextWrapping="Wrap"
                                            Margin="0,0,0,10" />
                                 <TextBlock Text="Select downloads"
-                                           Foreground="{ThemeResource SystemAccentColor}" />
+                                           Foreground="{ThemeResource SystemControlForegroundAccentBrush}" />
                                 <CheckBox Tag="Preview"
                                           Content="Preview"
                                           Checked="{x:Bind ViewModel.OptimizationCheckBox_Checked}"

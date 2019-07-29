@@ -1,4 +1,5 @@
 ﻿using Windows.UI.Xaml.Controls;
+using RemixDownloader.Core.Models;
 using RemixDownloader.Uwp.Common;
 using RemixDownloader.Uwp.Models;
 
@@ -12,9 +13,14 @@ namespace RemixDownloader.Uwp
             ViewModel.ItemScroller = this;
         }
 
-        public void ScrollToItem(ModelResultViewModel item)
+        public void ScrollListViewToItem(ModelResultViewModel item)
         {
             SelectedModelsListView.ScrollIntoView(item);
+        }
+
+        public void ScrollGridViewToItem(ModelResult item)
+        {
+            ModelsGridView.ScrollIntoView(item);
         }
     }
 }
