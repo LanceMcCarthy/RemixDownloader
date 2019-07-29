@@ -1,7 +1,8 @@
 # RemixDownloader
 An application that lets you quickly download 3D models in bulk from Remix 3D. This functionality is not available via the website.
 
-### Browsing and Downloading
+
+### First Step - Get the User ID
 
 To browse models, you'll need a Remix3D.com user ID code. You can easily get that code from the Remix3D website in the web browser address bar. Here are the steps to load models.
 
@@ -14,7 +15,19 @@ To browse models, you'll need a Remix3D.com user ID code. You can easily get tha
 
 > There is a default User ID `46rbnCYv5fy` in the app to help you get started, it's the **Xbox** account. Another example is `46reU3-wFPz`, this is the **Microsoft** account seen in the screenshot above (2,139 models).
 
-#### Selection and Download
+### Console App - Automatic bulk downloader
+
+Run the console app, 
+
+1. Enter the user's ID
+2. Enter the folder path
+3. Enter Y/N if you want the HoloLens and Mixed Reality files, too.
+
+The app will download the entire model library for that user. This will take time, approximately 15-20 second for every 10 models. If that user hs 2,000 models, do the math :)
+
+![image](https://dvlup.blob.core.windows.net/general-app-files/GIFs/RemixDownloaderConsoleGif.gif)
+
+### UWP App - Selection and Download
 
 Here are the steps to select and download model files.
 
