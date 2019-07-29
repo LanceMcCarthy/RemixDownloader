@@ -318,9 +318,8 @@
 
         <primitives:RadBusyIndicator x:Name="BusyIndicator"
                                      IsActive="{Binding IsBusy}"
+                                     Visibility="{Binding IsBusy}"
                                      AnimationStyle="AnimationStyle5"
-                                     Grid.Row="1"
-                                     Grid.RowSpan="2"
                                      Grid.Column="0"
                                      Grid.ColumnSpan="3"
                                      Background="#AAFFFFFF"
