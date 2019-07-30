@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using RemixDownloader.Core.Models;
 using RemixDownloader.Core.Services;
-using static System.Console;
 
 namespace RemixDownloader.Console
 {
@@ -22,37 +21,44 @@ namespace RemixDownloader.Console
 
         public static async Task Main(string[] args)
         {
-            WriteLine("Enter the Remix3D User ID (e.g. 46rbnCYv5fy). Press Enter for XBox UserId: ");
+            System.Console.Title = "Remix3D Downloader";
 
-            var userId = ReadLine();
+            UpdateStatus("Enter the Remix3D User ID (default:'46rbnCYv5fy' aka XBox):", ConsoleColor.White);
+
+            var userId = System.Console.ReadLine();
 
             if (string.IsNullOrEmpty(userId))
             {
                 userId = "46rbnCYv5fy";
             }
 
-            WriteLine("Enter folder path to save files to (e.g. c:\\Users\\You\\Downloads\\). Press Enter for app directory:");
+            UpdateStatus("Enter folder path to save files to (e.g. c:\\Users\\You\\Downloads\\). (default: \\appfolder\\Downloads\\):", ConsoleColor.White);
 
-            var folderPath = ReadLine();
+            var folderPath = System.Console.ReadLine();
 
             if (string.IsNullOrEmpty(userId))
             {
-                folderPath = Directory.GetCurrentDirectory();
+                folderPath = Path.Combine(Directory.GetCurrentDirectory(),"Downloads");
             }
 
-            WriteLine("Do you want to also download optimized HoloLens and WinMR models (Y/N)? This will add to the download time, but saves you a lot of conversion work later! Press Enter for N:");
+            //WriteLine("Do you want to also download optimized HoloLens and WinMR models (Y/N)? This will add to the download time, but saves you a lot of conversion work later! Press Enter for N:");
+            UpdateStatus("Do you want to also download optimized HoloLens and WinMR models? (default: N)?\r" +
+                         "\n- [Y/y] Yes, save the pre-optimized versions models, too (this will save conversion time later)." +
+                         "\n- [N/n] No, only save the original model file.", 
+                ConsoleColor.White);
 
-            var includeOptimizedString = ReadLine()?.ToLower();
+            var includeOptimizedString = System.Console.ReadLine()?.ToLower();
 
             if (string.IsNullOrEmpty(includeOptimizedString))
             {
                 includeOptimizedString = "n";
             }
 
-            bool includeOptimized = includeOptimizedString == "y";
+            bool includeOptimized = includeOptimizedString == "y" || 
+                                    includeOptimizedString == "e" || 
+                                    includeOptimizedString == "s";
 
-            ForegroundColor = ConsoleColor.Yellow;
-            WriteLine("Download starting, use CTRL+C to cancel at any time.");
+            UpdateStatus("Download starting! This will likely take a long time, use CTRL+C to cancel at any time.", ConsoleColor.Green);
 
             var userDirectoryPath = Path.Combine(folderPath, userId);
             var userDirectory = Directory.CreateDirectory(userDirectoryPath);
@@ -69,7 +75,7 @@ namespace RemixDownloader.Console
             _cancellationTokenSource = new CancellationTokenSource();
             _cancellationToken = _cancellationTokenSource.Token;
 
-            CancelKeyPress += Console_CancelKeyPress;
+            System.Console.CancelKeyPress += Console_CancelKeyPress;
 
             string contUrl = string.Empty;
 
@@ -102,13 +108,13 @@ namespace RemixDownloader.Console
 
                     downloadCount += 10;
 
-                    ForegroundColor = ConsoleColor.Green;
-                    WriteLine($"{downloadCount} models downloaded...");
+                    UpdateStatus($"{downloadCount} models completed...", ConsoleColor.DarkGreen);
                 }
             }
 
-            ForegroundColor = ConsoleColor.Green;
-            WriteLine($"DONE.");
+            UpdateStatus("DONE!", ConsoleColor.White);
+
+            System.Console.Title = "Remix3D Downloader - Done!";
 
             _cancellationTokenSource.Dispose();
             _cancellationTokenSource = null;
@@ -127,8 +133,9 @@ namespace RemixDownloader.Console
                         break;
                     }
 
-                    ForegroundColor = ConsoleColor.Yellow;
-                    WriteLine($"Downloading {item.Name}...");
+                    System.Console.Title = $"Remix3D Downloader - Downloading {item.Name}...";
+
+                    UpdateStatus($"Downloading {item.Name}...", ConsoleColor.DarkYellow);
 
                     // *** Phase 1 - Always downloading the original model file *** //
 
@@ -140,35 +147,40 @@ namespace RemixDownloader.Console
 
                     if (string.IsNullOrEmpty(downloadUrl))
                     {
+                        System.Console.SetCursorPosition(0, System.Console.CursorTop - 1);
+                        ClearCurrentConsoleLine();
+
+                        Debug.WriteLine($"{item.Name} downloadUrl was empty, skipping...");
                         continue;
                     }
 
                     using (var response = await _client.GetAsync(downloadUrl, _cancellationToken))
                     {
-                        if (response.IsSuccessStatusCode)
+                        if (!response.IsSuccessStatusCode)
                         {
-                            var bytes = await response.Content.ReadAsByteArrayAsync();
+                            System.Console.SetCursorPosition(0, System.Console.CursorTop - 1);
+                            ClearCurrentConsoleLine();
 
-                            if (bytes == null)
-                            {
-                                ForegroundColor = ConsoleColor.Red;
-                                Debug.WriteLine($"{item.Name} was not downloaded.");
-                                continue;
-                            }
-
-                            var fileType = item.ManifestUris.FirstOrDefault(u => u.Usage == "Download")?.Format;
-
-                            var fileName = $"{item.Name}.{fileType}";
-                            var filePath = Path.Combine(modelSubfolder.FullName, fileName);
-
-                            File.WriteAllBytes(filePath, bytes);
-
-                            ForegroundColor = ConsoleColor.White;
-                            SetCursorPosition(CursorLeft, CursorTop - 1);
-                            WriteLine();
-                            SetCursorPosition(CursorLeft, CursorTop - 1);
-                            WriteLine($"Saved {item.Name}.");
+                            Debug.WriteLine($"Skipping {item.Name}, bad HTTP status code - {response.StatusCode}");
+                            continue;
                         }
+
+                        var bytes = await response.Content.ReadAsByteArrayAsync();
+
+                        if (bytes == null)
+                        {
+                            UpdateStatus($"{item.Name} was not downloaded.", ConsoleColor.DarkRed);
+                            continue;
+                        }
+
+                        var fileType = item.ManifestUris.FirstOrDefault(u => u.Usage == "Download")?.Format;
+
+                        var fileName = $"{item.Name}.{fileType}";
+                        var filePath = Path.Combine(modelSubfolder.FullName, fileName);
+
+                        File.WriteAllBytes(filePath, bytes);
+
+                        UpdateStatus($"Saved {item.Name}.", ConsoleColor.White, true);
                     }
 
                     // *** Phase 2 - Download all the optimized versions available *** //
@@ -187,8 +199,7 @@ namespace RemixDownloader.Console
                                 break;
                             }
 
-                            ForegroundColor = ConsoleColor.DarkGray;
-                            WriteLine($"Downloading {optimization} version of {item.Name}...");
+                            UpdateStatus($"Downloading {optimization} version of {item.Name}...", ConsoleColor.DarkYellow);
 
                             // Get the enum of the optimization type
                             var lod = (AssetOptimizationType)Enum.Parse(typeof(AssetOptimizationType), optimization);
@@ -197,6 +208,8 @@ namespace RemixDownloader.Console
 
                             if (string.IsNullOrEmpty(extraDownloadUrl))
                             {
+                                System.Console.SetCursorPosition(0, System.Console.CursorTop - 1);
+                                ClearCurrentConsoleLine();
                                 continue;
                             }
 
@@ -204,16 +217,20 @@ namespace RemixDownloader.Console
                             {
                                 if (!response.IsSuccessStatusCode)
                                 {
+                                    System.Console.SetCursorPosition(0, System.Console.CursorTop - 1);
+                                    ClearCurrentConsoleLine();
                                     continue;
                                 }
 
                                 var extraFileBytes = await response.Content.ReadAsByteArrayAsync();
 
                                 // If this one failed, move on to next optimization
+
                                 if (extraFileBytes == null || extraFileBytes.Length == 0)
                                 {
-                                    ForegroundColor = ConsoleColor.Red;
-                                    Debug.WriteLine($"{item.Name} - {optimization} was not downloaded.");
+                                    System.Console.SetCursorPosition(0, System.Console.CursorTop - 1);
+                                    ClearCurrentConsoleLine();
+                                    Debug.WriteLine($"{item.Name} - {optimization} was not saved.");
                                     continue;
                                 }
 
@@ -230,45 +247,61 @@ namespace RemixDownloader.Console
 
                                 File.WriteAllBytes(extraFilePath, extraFileBytes);
 
-                                SetCursorPosition(CursorLeft, CursorTop - 1);
-                                WriteLine();
-                                SetCursorPosition(CursorLeft, CursorTop - 1);
-                                ForegroundColor = ConsoleColor.Yellow;
-                                WriteLine($"Saved {item.Name} for {optimization}.");
+                                UpdateStatus($"Saved {item.Name} for {optimization}.", ConsoleColor.Yellow, true);
                             }
                         }
                         catch (Exception ex)
                         {
-                            ForegroundColor = ConsoleColor.Red;
-                            WriteLine($"Exception getting LOD {item.Name} {optimization} - {ex.Message}");
+                            var errorMessage = $"Exception getting LOD {item.Name} {optimization} - {ex.Message}";
 
-                            Debug.WriteLine($"Exception getting LOD {item.Name} {optimization} - {ex.Message}");
+                            UpdateStatus(errorMessage, ConsoleColor.Red);
+                            Debug.WriteLine(errorMessage);
                         }
                     }
 
-                    ForegroundColor = ConsoleColor.DarkCyan;
-                    WriteLine($"Completed {item.Name}");
-
+                    UpdateStatus($"--- {item.Name} complete ---", ConsoleColor.DarkCyan);
                 }
                 catch (Exception ex)
                 {
-                    ForegroundColor = ConsoleColor.Red;
-                    WriteLine($"Exception getting {item.Name} - {ex.Message}");
+                    var errorMessage = $"Exception getting {item.Name} - {ex.Message}";
 
-                    Debug.WriteLine($"Exception getting {item.Name} - {ex.Message}");
+                    UpdateStatus(errorMessage, ConsoleColor.Red);
+                    Debug.WriteLine(errorMessage);
                 }
             }
         }
 
         private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
-            ForegroundColor = ConsoleColor.Red;
-            WriteLine($"Canceling...");
+            UpdateStatus("Requesting cancel, please wait...", ConsoleColor.Red);
 
             _cancellationTokenSource.Cancel();
 
             _hasMoreItems = false;
             e.Cancel = true;
+
+            UpdateStatus("Cancel request complete.", ConsoleColor.White);
+        }
+
+        private static void UpdateStatus(string message, ConsoleColor textColor, bool replaceLastLine = false)
+        {
+            if (replaceLastLine)
+            {
+                System.Console.SetCursorPosition(0, System.Console.CursorTop - 1);
+                ClearCurrentConsoleLine();
+            }
+
+            System.Console.ForegroundColor = textColor;
+            System.Console.WriteLine(message);
+        }
+
+        // Credit https://stackoverflow.com/a/8946847/1406210
+        public static void ClearCurrentConsoleLine()
+        {
+            int currentLineCursor = System.Console.CursorTop;
+            System.Console.SetCursorPosition(0, System.Console.CursorTop);
+            System.Console.Write(new string(' ', System.Console.WindowWidth));
+            System.Console.SetCursorPosition(0, currentLineCursor);
         }
     }
 }
