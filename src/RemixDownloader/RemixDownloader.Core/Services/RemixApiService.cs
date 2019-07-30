@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using RemixDownloader.Core.Models;
 
@@ -18,6 +16,7 @@ namespace RemixDownloader.Core.Services
 
         // User endpoint hxxps://api.remix3d.com:443/v3/users/{userId}/uploads?
         // Board endpoint hxxps://api.remix3d.com:443/v3/boards/{boardId}?
+        // User endpoint hxxps://api.remix3d.com:443/v3/users/{userId}
 
         public RemixApiService()
         {
@@ -29,6 +28,18 @@ namespace RemixDownloader.Core.Services
             }
 
             client = new HttpClient(handler);
+        }
+
+        public async Task<RemixUserResponse> GetUserAsync(string userId)
+        {
+            string json = string.Empty;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                json = await client.GetStringAsync($"{ApiRoot}/users/{userId}");
+            }
+
+            return RemixUserResponse.FromJson(json);
         }
 
         public async Task<RemixUserListResponse> GetModelsForUserAsync(string userId, string continuationUrl = null)
