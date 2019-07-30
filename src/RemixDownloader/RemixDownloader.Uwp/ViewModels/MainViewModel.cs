@@ -24,6 +24,8 @@ namespace RemixDownloader.Uwp.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
+        private readonly HttpClient client;
+        private RemixUserResponse userProfile;
         private IncrementalLoadingCollection<ModelResult> models;
         private ObservableCollection<ModelResultViewModel> selectedModels;
         private string continuationUri = string.Empty;
@@ -31,26 +33,17 @@ namespace RemixDownloader.Uwp.ViewModels
         private CancellationToken cancellationToken;
         private StorageFolder preferredDownloadFolder;
         private string boardButtonText = "Get Board Models";
-        private string userButtonText = "List User Models";
-        private string downloadAllUserModelsButtonText = "Download All Models Now";
         private List<string> selectedOptionalDownloads;
         private string boardId = "3T5ZY5WEWCn";
-        private string userId = "46rbnCYv5fy";
+        private string enteredUserId = "46rbnCYv5fy";
         private string downloadFolderName = "Select download folder:";
+
         private bool isReadyForDownload;
-
-        private HttpClient client;
-
-        private string currentUserId;
-        private bool isDownloadAllButtonEnabled;
+        private bool stopDownloadLoop;
+        private double downloadProgress;
 
         public MainViewModel()
         {
-            //if (DesignMode.DesignModeEnabled || DesignMode.DesignMode2Enabled)
-            //{
-            //    Models = SampleDataHelpers.GetDesignTimeUserDataAsync().Result;
-            //}
-
             var handler = new HttpClientHandler();
 
             if (handler.SupportsAutomaticDecompression)
@@ -59,6 +52,12 @@ namespace RemixDownloader.Uwp.ViewModels
             }
 
             client = new HttpClient(handler);
+        }
+
+        public RemixUserResponse UserProfile
+        {
+            get => userProfile;
+            set => SetProperty(ref userProfile, value);
         }
 
         public ObservableCollection<ModelResultViewModel> SelectedModels
@@ -91,28 +90,10 @@ namespace RemixDownloader.Uwp.ViewModels
             set => SetProperty(ref boardId, value);
         }
 
-        public string UserButtonText
+        public string EnteredUserId
         {
-            get => userButtonText;
-            set => SetProperty(ref userButtonText, value);
-        }
-
-        public string DownloadAllUserModelsButtonText
-        {
-            get => downloadAllUserModelsButtonText;
-            set => SetProperty(ref downloadAllUserModelsButtonText, value);
-        }
-
-        public bool IsDownloadAllButtonEnabled
-        {
-            get => isDownloadAllButtonEnabled;
-            set => SetProperty(ref isDownloadAllButtonEnabled, value);
-        }
-
-        public string UserId
-        {
-            get => userId;
-            set => SetProperty(ref userId, value);
+            get => enteredUserId;
+            set => SetProperty(ref enteredUserId, value);
         }
 
         public string DownloadFolderName
@@ -127,13 +108,50 @@ namespace RemixDownloader.Uwp.ViewModels
             set => SetProperty(ref isReadyForDownload, value);
         }
 
+        public double DownloadProgress
+        {
+            get => downloadProgress;
+            set => SetProperty(ref downloadProgress, value);
+        }
+
         public IScrollToItem ItemScroller { get; set; }
+
+        public async void LoadUser_OnClick(object sender, RoutedEventArgs e)
+        {
+            BoardButtonText = "Get Board Models";
+
+            // get the Id
+            if (string.IsNullOrEmpty(EnteredUserId))
+            {
+                await new MessageDialog("You need to enter a valid User ID.").ShowAsync();
+                return;
+            }
+
+            RemixUserResponse result = null;
+
+            try
+            {
+                result = await RemixApiService.Current.GetUserAsync(EnteredUserId);
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine($"User ID fetch failed - {exception.Message}");
+            }
+
+            if (result == null)
+            {
+                await new MessageDialog("The User ID you entered is not for a valid or current profile, check the ID (case sensitive!) and try again.").ShowAsync();
+            }
+            else
+            {
+                UserProfile = result;
+
+                Models = new IncrementalLoadingCollection<ModelResult>(GetMoreItems) { BatchSize = 10 };
+            }
+        }
 
         public async void LoadBoardModels_OnClick(object sender, RoutedEventArgs e)
         {
-            // Reset other button
-            UserButtonText = "Get User Models";
-
             // get the Id
             if (string.IsNullOrEmpty(BoardId))
             {
@@ -168,52 +186,32 @@ namespace RemixDownloader.Uwp.ViewModels
             }
         }
 
-        public async void LoadUserModels_OnClick(object sender, RoutedEventArgs e)
-        {
-            BoardButtonText = "Get Board Models";
-
-            // get the Id
-            if (string.IsNullOrEmpty(UserId))
-            {
-                await new MessageDialog("You need to enter a valid User ID.").ShowAsync();
-            }
-            else
-            {
-                // Need to keep a safe copy, in case the user changes the ID in th emiddle of automatic load on demand
-                currentUserId = UserId;
-
-                Models = new IncrementalLoadingCollection<ModelResult>(GetMoreItems) { BatchSize = 10 };
-
-                UserButtonText = "Change User";
-            }
-        }
-
-        private async Task<IEnumerable<ModelResult>> GetMoreItems(uint count)
-        {
-            RemixUserListResponse result;
-
-            if (string.IsNullOrEmpty(continuationUri))
-            {
-                result = await RemixApiService.Current.GetModelsForUserAsync(currentUserId);
-            }
-            else
-            {
-                result = await RemixApiService.Current.GetModelsForUserAsync(currentUserId, continuationUri);
-            }
-
-            // No more items to get
-            if (string.IsNullOrEmpty(result.ContinuationUri))
-            {
-                return null;
-            }
-
-            continuationUri = result.ContinuationUri;
-
-            return result.Results;
-        }
-
         public async void DownloadAllUserModels_OnClick(object sender, RoutedEventArgs e)
         {
+            // Make sure there is a valid profile loaded
+            if (UserProfile == null)
+            {
+                await new MessageDialog("You need to first load a Remix3D user profile.").ShowAsync();
+                return;
+            }
+
+            var md = new MessageDialog("This operation is going to take a while depending on how many models the user has.\r\nDo you want to also download the pre-optimized models for HoloLens and Mixed Reality? This is a nice benefit to take advantage of because you will not have to decimate or improve the model later.", "Include Optimized Models");
+            md.Commands.Add(new UICommand("Yes (adds time, but worth it)"));
+            md.Commands.Add(new UICommand("No"));
+            md.Commands.Add(new UICommand("Cancel"));
+
+            var dialogResult = await md.ShowAsync();
+
+            if (dialogResult.Label == "Cancel")
+            {
+                return;
+            }
+
+            // This is a parameter for the downloader Task
+            var includeOptimizedFiles = dialogResult.Label != "No";
+
+            // User selected target folder (the app will create a subfolder for the UserID) 
+
             var folderPicker = new FolderPicker { SuggestedStartLocation = PickerLocationId.Downloads };
             folderPicker.FileTypeFilter.Add("*");
 
@@ -226,39 +224,69 @@ namespace RemixDownloader.Uwp.ViewModels
             }
             else
             {
+                // If canceled or folder selection failed
                 return;
             }
+
+            // Create a subfolder for the user
+            var userSubfolder = await folder.CreateFolderAsync(UserProfile.Id, CreationCollisionOption.OpenIfExists);
+
+            cancellationTokenSource = new CancellationTokenSource();
+            cancellationToken = cancellationTokenSource.Token;
 
             IsBusy = true;
             IsBusyMessage = "downloading model files...";
 
             string contUrl = string.Empty;
 
-            while (true)
+            int currentDownloadCount = 0;
+
+            while (!stopDownloadLoop)
             {
                 RemixUserListResponse result;
 
                 if (string.IsNullOrEmpty(contUrl))
                 {
-                    result = await RemixApiService.Current.GetModelsForUserAsync(currentUserId);
+                    result = await RemixApiService.Current.GetModelsForUserAsync(UserProfile.Id);
                 }
                 else
                 {
-                    result = await RemixApiService.Current.GetModelsForUserAsync(currentUserId, contUrl);
+                    result = await RemixApiService.Current.GetModelsForUserAsync(UserProfile.Id, contUrl);
                 }
 
-                // We're done! Leave the while loop.
-                if (string.IsNullOrEmpty(result.ContinuationUri))
+                if (result != null)
                 {
+                    // We're done or the UserID doesn't exist. Leave the while loop.
+                    if (string.IsNullOrEmpty(result.ContinuationUri))
+                    {
+                        if (result.Results.Count > 0)
+                        {
+                            await DownloadAllFilesAsync(result.Results, userSubfolder, includeOptimizedFiles);
+                        }
+
+                        DownloadProgress = 100;
+
+                        stopDownloadLoop = true;
+                    }
+                    else
+                    {
+                        // This Task will try to download all the files for each of the recently fetched models.
+                        await DownloadAllFilesAsync(result.Results, userSubfolder, includeOptimizedFiles);
+
+                        currentDownloadCount += result.Results.Count;
+                        DownloadProgress = currentDownloadCount / (long)UserProfile.CreationCount * 100;
+
+                        contUrl = result.ContinuationUri;
+                    }
+                }
+                else
+                {
+                    stopDownloadLoop = true;
                     break;
                 }
-
-                contUrl = result.ContinuationUri;
-
-                // This Task will try to download all the files for each of the recently fetched models.
-                await DownloadAllFilesAsync(result.Results, folder);
             }
 
+            DownloadProgress = 0;
             IsBusy = false;
             IsBusyMessage = "done!";
         }
@@ -269,7 +297,6 @@ namespace RemixDownloader.Uwp.ViewModels
             SelectedModels.Clear();
             continuationUri = string.Empty;
             BoardButtonText = "Get Board Models";
-            UserButtonText = "Get User Models";
         }
 
         public void ModelsGridView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -361,7 +388,7 @@ namespace RemixDownloader.Uwp.ViewModels
             }
         }
 
-        public async void Download_OnClick(object sender, RoutedEventArgs e)
+        public async void DownloadSelectedModels_OnClick(object sender, RoutedEventArgs e)
         {
             if (preferredDownloadFolder == null)
             {
@@ -377,10 +404,39 @@ namespace RemixDownloader.Uwp.ViewModels
 
         public void Cancel_OnClick(object sender, RoutedEventArgs e)
         {
+            IsBusyMessage = "Cancelling, please wait...";
+
             cancellationTokenSource.Cancel();
 
-            IsBusy = false;
+            stopDownloadLoop = true;
+
             IsBusyMessage = "Cancelled";
+
+            IsBusy = false;
+        }
+
+        private async Task<IEnumerable<ModelResult>> GetMoreItems(uint count)
+        {
+            RemixUserListResponse result;
+
+            if (string.IsNullOrEmpty(continuationUri))
+            {
+                result = await RemixApiService.Current.GetModelsForUserAsync(UserProfile.Id);
+            }
+            else
+            {
+                result = await RemixApiService.Current.GetModelsForUserAsync(UserProfile.Id, continuationUri);
+            }
+
+            // No more items to get
+            if (string.IsNullOrEmpty(result.ContinuationUri))
+            {
+                return null;
+            }
+
+            continuationUri = result.ContinuationUri;
+
+            return result.Results;
         }
 
         private async Task DownloadModelsAsync(StorageFolder folder)
@@ -519,7 +575,7 @@ namespace RemixDownloader.Uwp.ViewModels
             IsBusyMessage = "done!";
         }
 
-        private async Task DownloadAllFilesAsync(IEnumerable<ModelResult> items, StorageFolder selectedFolder)
+        private async Task DownloadAllFilesAsync(IEnumerable<ModelResult> items, StorageFolder selectedFolder, bool includeOptimized = false)
         {
             foreach (var item in items)
             {
@@ -531,8 +587,6 @@ namespace RemixDownloader.Uwp.ViewModels
                     }
 
                     IsBusyMessage = $"Downloading {item.Name}...";
-
-
 
                     // *** Phase 1 - Always downloading the original model file *** //
 
@@ -573,6 +627,10 @@ namespace RemixDownloader.Uwp.ViewModels
                     }
 
                     // *** Phase 2 - Download all the optimized versions available *** //
+
+                    // If the user only wants the original file, skip this.
+                    if(!includeOptimized)
+                        continue;
 
                     foreach (var optimization in new []{ "Preview", "Performance", "Quality", "HoloLens", "WindowsMR"})
                     {
