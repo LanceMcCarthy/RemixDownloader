@@ -8,14 +8,14 @@
 
   <Identity
     Name="adcc87fa-b966-47bb-97c3-75a6e8972f14"
-    Publisher="CN=lance"
-    Version="2019.720.1.0" />
+    Publisher="CN=&quot;Lancelot Software, LLC&quot;, O=&quot;Lancelot Software, LLC&quot;, L=NORTH BILLERICA, S=Massachusetts, C=US"
+    Version="2019.731.2.0" />
 
   <mp:PhoneIdentity PhoneProductId="adcc87fa-b966-47bb-97c3-75a6e8972f14" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>RemixDownloader.Uwp</DisplayName>
-    <PublisherDisplayName>lance</PublisherDisplayName>
+    <PublisherDisplayName>Lancelot Software, LLC</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -37,7 +37,7 @@
         Square44x44Logo="Assets\Square44x44Logo.png"
         Description="RemixDownloader.Uwp"
         BackgroundColor="transparent">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png" ShortName="Remix Downloader"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
     </Application>
