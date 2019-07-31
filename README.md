@@ -2,6 +2,13 @@
 An application that lets you quickly download 3D models in bulk from Remix 3D. This functionality is not available via the website.
 
 
+| Project  | Build Status | Release Status |
+|----------|--------------| -------------- |
+| .NET Core Console App | [![Console](https://dev.azure.com/lance/RemixDownloader/_apis/build/status/RemixDownloader%20Console)](https://dev.azure.com/lance/RemixDownloader/_build/latest?definitionId=22) | n/a |
+| UWP App | [![Build status](https://dev.azure.com/lance/RemixDownloader/_apis/build/status/RemixDownloader%20UWP)](https://dev.azure.com/lance/RemixDownloader/_build/latest?definitionId=23) | ![](https://vsrm.dev.azure.com/lance/_apis/public/Release/badge/1fb26b14-bf7c-446d-9ce2-f817fdc1756b/1/1) |
+
+
+
 ### First Step - Getting the User ID
 
 To browse models, you'll need a Remix3D.com user ID code. You can easily get that code from the Remix3D website in the web browser address bar. Here are the steps to load models.
@@ -22,16 +29,17 @@ Run the console app, and take the following steps.
 2. Enter the **folder path** you want to save the files in (e.g. `C:\Users\Lance\Downloads\`). *The app will automatically organize subfolders for you*.
 3. Enter **Y** or **N** if you want the HoloLens and Mixed Reality files, too.
 
-The app will download the entire model library for that user. This may take some time, see the GIF below for the average download time for each model. If that user has 2,000 models, do the math :)
 
 ![image](https://dvlup.blob.core.windows.net/general-app-files/GIFs/Remix3DDownloaderConsoleBetter.gif)
+
+> The app will download the entire model library for that user. In my tests, it took ~3 hours to backup all **2664 models** from the XBox account which resulted in **7992** files (I enabled the HoloLens and WinMR option).
 
 ### UWP App - Selection and Download
 
 
-Here are the steps to select and download model files.
+If you would prefer to see the models first, the UWP app is the better option for you. You can either select a few to save, or bulk download everything, here are the steps to follow:
 
-Enter the User ID in the UserID box, then click either **Load User Models** or **Download All Models** button.
+Step 1 - Enter the User ID in the UserID box, then click either **Load User Models** or **Download All Models** button.
 
 *If you chose List User Models:*
 
@@ -41,7 +49,7 @@ Enter the User ID in the UserID box, then click either **Load User Models** or *
 
 *If you choose Download All Models:*
 
-This is a long running process and <u>could take more than an hour</u> depending on how many models that user has. For example, the Microsoft and XBox users have more than 2,000 models! Please be patient, the process will stop once there are no more items for that user.
+This is a long running process and <u>could take hours</u> depending on how many models that user has. For example, the Microsoft and XBox users have more than 2,000 models! Please be patient, the process will stop once there are no more items for that user.
 
 ![image](https://user-images.githubusercontent.com/3520532/62094015-92fe3200-b249-11e9-8cc8-e5982308906b.png)
 
