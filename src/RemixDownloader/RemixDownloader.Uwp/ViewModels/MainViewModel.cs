@@ -240,49 +240,59 @@ namespace RemixDownloader.Uwp.ViewModels
             string contUrl = string.Empty;
 
             int currentDownloadCount = 0;
+            int loopNumber = 0;
 
             while (!stopDownloadLoop)
             {
-                RemixUserListResponse result;
+                try
+                {
+                    loopNumber++;
 
-                if (string.IsNullOrEmpty(contUrl))
-                {
-                    result = await RemixApiService.Current.GetModelsForUserAsync(UserProfile.Id);
-                }
-                else
-                {
-                    result = await RemixApiService.Current.GetModelsForUserAsync(UserProfile.Id, contUrl);
-                }
+                    RemixUserListResponse result;
 
-                if (result != null)
-                {
-                    // We're done or the UserID doesn't exist. Leave the while loop.
-                    if (string.IsNullOrEmpty(result.ContinuationUri))
+                    if (string.IsNullOrEmpty(contUrl))
                     {
-                        if (result.Results.Count > 0)
-                        {
-                            await DownloadAllFilesAsync(result.Results, userSubfolder, includeOptimizedFiles);
-                        }
-
-                        DownloadProgress = 100;
-
-                        stopDownloadLoop = true;
+                        result = await RemixApiService.Current.GetModelsForUserAsync(UserProfile.Id);
                     }
                     else
                     {
-                        // This Task will try to download all the files for each of the recently fetched models.
-                        await DownloadAllFilesAsync(result.Results, userSubfolder, includeOptimizedFiles);
+                        result = await RemixApiService.Current.GetModelsForUserAsync(UserProfile.Id, contUrl);
+                    }
 
-                        currentDownloadCount += result.Results.Count;
-                        DownloadProgress = currentDownloadCount / (long)UserProfile.CreationCount * 100;
+                    if (result != null)
+                    {
+                        // We're done or the UserID doesn't exist. Leave the while loop.
+                        if (string.IsNullOrEmpty(result.ContinuationUri))
+                        {
+                            if (result.Results.Count > 0)
+                            {
+                                await DownloadAllFilesAsync(result.Results, userSubfolder, includeOptimizedFiles);
+                            }
 
-                        contUrl = result.ContinuationUri;
+                            DownloadProgress = 100;
+
+                            stopDownloadLoop = true;
+                        }
+                        else
+                        {
+                            // This Task will try to download all the files for each of the recently fetched models.
+                            await DownloadAllFilesAsync(result.Results, userSubfolder, includeOptimizedFiles);
+
+                            currentDownloadCount += result.Results.Count;
+                            DownloadProgress = currentDownloadCount / (long)UserProfile.CreationCount * 100;
+
+                            contUrl = result.ContinuationUri;
+                        }
+                    }
+                    else
+                    {
+                        stopDownloadLoop = true;
+                        break;
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    stopDownloadLoop = true;
-                    break;
+                    IsBusyMessage = $"Error in loop #{loopNumber}.\n\nException Message:\n{ex.Message}.\nInner Exception:\n{ex.InnerException?.Message}";
                 }
             }
 
