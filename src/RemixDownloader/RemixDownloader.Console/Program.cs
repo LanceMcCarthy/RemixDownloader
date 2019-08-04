@@ -80,35 +80,45 @@ namespace RemixDownloader.Console
             string contUrl = string.Empty;
 
             int downloadCount = 0;
+            int loopNumber = 0;
 
             while (_hasMoreItems)
             {
-                RemixUserListResponse result;
-
-                if (string.IsNullOrEmpty(contUrl))
+                try
                 {
-                    result = await RemixApiService.Current.GetModelsForUserAsync(userId);
+                    loopNumber++;
+
+                    RemixUserListResponse result;
+
+                    if (string.IsNullOrEmpty(contUrl))
+                    {
+                        result = await RemixApiService.Current.GetModelsForUserAsync(userId);
+                    }
+                    else
+                    {
+                        result = await RemixApiService.Current.GetModelsForUserAsync(userId, contUrl);
+                    }
+
+                    // We're done! Leave the while loop.
+                    if (string.IsNullOrEmpty(result.ContinuationUri))
+                    {
+                        _hasMoreItems = false;
+                    }
+                    else
+                    {
+                        contUrl = result.ContinuationUri;
+
+                        // This Task will try to download all the files for each of the recently fetched models.
+                        await DownloadAllFilesAsync(result.Results, userDirectory, includeOptimized);
+
+                        downloadCount += 10;
+
+                        UpdateStatus($"{downloadCount} models completed...", ConsoleColor.DarkGreen);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    result = await RemixApiService.Current.GetModelsForUserAsync(userId, contUrl);
-                }
-
-                // We're done! Leave the while loop.
-                if (string.IsNullOrEmpty(result.ContinuationUri))
-                {
-                    _hasMoreItems = false;
-                }
-                else
-                {
-                    contUrl = result.ContinuationUri;
-
-                    // This Task will try to download all the files for each of the recently fetched models.
-                    await DownloadAllFilesAsync(result.Results, userDirectory, includeOptimized);
-
-                    downloadCount += 10;
-
-                    UpdateStatus($"{downloadCount} models completed...", ConsoleColor.DarkGreen);
+                    UpdateStatus($"Error in loop #{loopNumber}.\n\nException Message:\n{ex.Message}.\nInner Exception:\n{ex.InnerException?.Message}", ConsoleColor.Red);
                 }
             }
 
