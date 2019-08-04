@@ -4,7 +4,7 @@ An application that lets you quickly download 3D models in bulk from Remix 3D. T
 
 | Project  | Build Status | Release Status |
 |----------|--------------| -------------- |
-| .NET Core Console App | [![Console](https://dev.azure.com/lance/RemixDownloader/_apis/build/status/RemixDownloader%20Console)](https://dev.azure.com/lance/RemixDownloader/_build/latest?definitionId=22) | n/a |
+| .NET Core Console App | [![Console](https://dev.azure.com/lance/RemixDownloader/_apis/build/status/RemixDownloader%20Console)](https://dev.azure.com/lance/RemixDownloader/_build/latest?definitionId=22) | ![](https://vsrm.dev.azure.com/lance/_apis/public/Release/badge/1fb26b14-bf7c-446d-9ce2-f817fdc1756b/2/2) |
 | UWP App | [![Build status](https://dev.azure.com/lance/RemixDownloader/_apis/build/status/RemixDownloader%20UWP)](https://dev.azure.com/lance/RemixDownloader/_build/latest?definitionId=23) | ![](https://vsrm.dev.azure.com/lance/_apis/public/Release/badge/1fb26b14-bf7c-446d-9ce2-f817fdc1756b/1/1) |
 
 
