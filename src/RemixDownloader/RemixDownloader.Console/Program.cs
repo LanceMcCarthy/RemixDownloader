@@ -22,14 +22,17 @@ namespace RemixDownloader.Console
         public static async Task Main(string[] args)
         {
             System.Console.Title = "Remix3D Downloader";
+            
+            // XBox User ID
+            var defaultUserID = "46rbnCYv5fy";
 
-            UpdateStatus("Enter the Remix3D User ID (default:'46rbnCYv5fy' aka XBox):", ConsoleColor.White);
+            UpdateStatus($"Enter the Remix3D User ID (default:'{defaultUserID}' aka XBox):", ConsoleColor.White);
 
             var userId = System.Console.ReadLine();
 
             if (string.IsNullOrEmpty(userId))
             {
-                userId = "46rbnCYv5fy";
+                userId = defaultUserID;
             }
 
             UpdateStatus("Enter folder path to save files to (e.g. c:\\Users\\You\\Downloads\\). (default: \\appfolder\\Downloads\\):", ConsoleColor.White);
@@ -54,9 +57,7 @@ namespace RemixDownloader.Console
                 includeOptimizedString = "n";
             }
 
-            bool includeOptimized = includeOptimizedString == "y" || 
-                                    includeOptimizedString == "e" || 
-                                    includeOptimizedString == "s";
+            bool includeOptimized = includeOptimizedString == "y";
 
             UpdateStatus("Download starting! This will likely take a long time, use CTRL+C to cancel at any time.", ConsoleColor.Green);
 
@@ -99,21 +100,19 @@ namespace RemixDownloader.Console
                         result = await RemixApiService.Current.GetModelsForUserAsync(userId, contUrl);
                     }
 
+                    contUrl = result.ContinuationUri;
+
+                    // This Task will try to download all the files for each of the recently fetched models.
+                    var numSuccessfulDownloads = await DownloadAllFilesAsync(result.Results, userDirectory, includeOptimized);
+
+                    downloadCount += numSuccessfulDownloads;
+
+                    UpdateStatus($"{downloadCount} models completed...", ConsoleColor.DarkGreen);
+
                     // We're done! Leave the while loop.
                     if (string.IsNullOrEmpty(result.ContinuationUri))
                     {
                         _hasMoreItems = false;
-                    }
-                    else
-                    {
-                        contUrl = result.ContinuationUri;
-
-                        // This Task will try to download all the files for each of the recently fetched models.
-                        await DownloadAllFilesAsync(result.Results, userDirectory, includeOptimized);
-
-                        downloadCount += 10;
-
-                        UpdateStatus($"{downloadCount} models completed...", ConsoleColor.DarkGreen);
                     }
                 }
                 catch (Exception ex)
@@ -132,8 +131,9 @@ namespace RemixDownloader.Console
             _client = null;
         }
 
-        private static async Task DownloadAllFilesAsync(IEnumerable<ModelResult> items, DirectoryInfo selectedFolder, bool includeOptimized = false)
+        private static async Task<int> DownloadAllFilesAsync(IEnumerable<ModelResult> items, DirectoryInfo selectedFolder, bool includeOptimized = false)
         {
+            var successfulDownloads = 0;
             foreach (var item in items)
             {
                 try
@@ -149,9 +149,11 @@ namespace RemixDownloader.Console
 
                     // *** Phase 1 - Always downloading the original model file *** //
 
-                    // Create a subfolder for each group of files.
-                    var modelSubfolder = selectedFolder.CreateSubdirectory(item.Name);
 
+                    // Create a subfolder for each group of files.
+                    // The ID is suffixed to prevent collisions of models with the same name
+                    var modelSubfolder = selectedFolder.CreateSubdirectory($"{item.Name}-{item.Id}");
+                    
                     // Get the original model file
                     var downloadUrl = item.ManifestUris.FirstOrDefault(u => u.Usage.ToLower() == "download")?.Uri;
 
@@ -163,35 +165,41 @@ namespace RemixDownloader.Console
                         Debug.WriteLine($"{item.Name} downloadUrl was empty, skipping...");
                         continue;
                     }
+                    
+                    var fileType = item.ManifestUris.FirstOrDefault(u => u.Usage == "Download")?.Format.ToLower();
+                    var fileName = $"{item.Name}.{fileType}";
 
-                    using (var response = await _client.GetAsync(downloadUrl, _cancellationToken))
+                    var gltfData = await DownloadFile(downloadUrl, _cancellationToken);
+                    if (gltfData == null)
                     {
-                        if (!response.IsSuccessStatusCode)
-                        {
-                            System.Console.SetCursorPosition(0, System.Console.CursorTop - 1);
-                            ClearCurrentConsoleLine();
-
-                            Debug.WriteLine($"Skipping {item.Name}, bad HTTP status code - {response.StatusCode}");
-                            continue;
-                        }
-
-                        var bytes = await response.Content.ReadAsByteArrayAsync();
-
-                        if (bytes == null)
-                        {
-                            UpdateStatus($"{item.Name} was not downloaded.", ConsoleColor.DarkRed);
-                            continue;
-                        }
-
-                        var fileType = item.ManifestUris.FirstOrDefault(u => u.Usage == "Download")?.Format;
-
-                        var fileName = $"{item.Name}.{fileType}";
-                        var filePath = Path.Combine(modelSubfolder.FullName, fileName);
-
-                        File.WriteAllBytes(filePath, bytes);
-
-                        UpdateStatus($"Saved {item.Name}.", ConsoleColor.White, true);
+                        UpdateStatus($"{fileName} was not downloaded.", ConsoleColor.DarkRed);
+                        continue;
                     }
+                    SaveToDisk(modelSubfolder, fileName, gltfData);
+
+                    var gltfModel = ParseGltfModel(gltfData);
+
+                    var resourceRootUrl = GetGltfResourceRootUrl(downloadUrl);
+
+                    // Extract URIs for resourced referenced by glTF file
+                    var bufferUris = gltfModel.Buffers.Select(buffer => buffer.Uri);
+                    var imageUris = gltfModel.Images.Select(image => image.Uri);
+
+                    // Combining list of URIs to make progress tracking simpler (& slightly dedupe code)
+                    var additionalResourceUrIs = bufferUris.Concat(imageUris).ToArray();
+
+                    var downloadedCount = 0;
+                    foreach (var filename in additionalResourceUrIs)
+                    {
+                        UpdateStatus($"Downloading {downloadedCount+1}/{additionalResourceUrIs.Count()} asset(s)", ConsoleColor.White, true);
+                        var targetFileUrl = $"{resourceRootUrl}/{filename}";
+                        var bytes = await DownloadFile(targetFileUrl, _cancellationToken);
+                        SaveToDisk(modelSubfolder, filename, bytes);
+                        downloadedCount++;
+                    }
+                    
+                    successfulDownloads++;
+                    UpdateStatus($"Saved {item.Name}.", ConsoleColor.White, true);
 
                     // *** Phase 2 - Download all the optimized versions available *** //
 
@@ -279,6 +287,47 @@ namespace RemixDownloader.Console
                     Debug.WriteLine(errorMessage);
                 }
             }
+            return successfulDownloads;
+        }
+
+        private static async Task<byte[]> DownloadFile(string downloadUrl, CancellationToken cancellationToken) {
+            var response = await _client.GetAsync(downloadUrl, cancellationToken);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                Debug.WriteLine($"Downloading failed; bad HTTP status code - {response.StatusCode}");
+                return null;
+            }
+            
+            return await response.Content.ReadAsByteArrayAsync();
+        }
+
+        private static void SaveToDisk(FileSystemInfo destinationDirectory, string filename, byte[] data)
+        {
+            var filePath = Path.Combine(destinationDirectory.FullName, filename);
+            File.WriteAllBytes(filePath, data);
+        }
+
+        private static GltfFile ParseGltfModel(byte[] data)
+        {
+            var jsonString = System.Text.Encoding.UTF8.GetString(data);
+            return GltfFile.FromJson(jsonString);
+        }
+
+        /*
+         * Takes a glTF file URL returned from the API and strips the filename so that "adjacent" components can be downloaded
+         */
+        private static string GetGltfResourceRootUrl(string originalGltfUrl)
+        {
+            var urlPieces = new Uri(originalGltfUrl);
+            var localPath = urlPieces.LocalPath; // e.g. /v3/creations/9...e/gltf/003/9...e/004/0...5/9a1eb96b977d4d11bbca688c9590e11d.glb.gltf
+            
+            // Trims off the final component of the path in the URL
+            // From /v3/creations/9...e/gltf/003/9...e/004/0...5/9a1eb96b977d4d11bbca688c9590e11d.glb.gltf
+            // To   /v3/creations/9...e/gltf/003/9...e/004/0...5
+            var pathPieces = localPath.Split("/");
+            var sansFinalResource = string.Join("/", pathPieces.SkipLast(1).ToArray());
+            return $"{urlPieces.Scheme}://{urlPieces.Host}{sansFinalResource}";
         }
 
         private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
@@ -308,10 +357,17 @@ namespace RemixDownloader.Console
         // Credit https://stackoverflow.com/a/8946847/1406210
         public static void ClearCurrentConsoleLine()
         {
-            int currentLineCursor = System.Console.CursorTop;
-            System.Console.SetCursorPosition(0, System.Console.CursorTop);
-            System.Console.Write(new string(' ', System.Console.WindowWidth));
-            System.Console.SetCursorPosition(0, currentLineCursor);
+            try
+            {
+                int currentLineCursor = System.Console.CursorTop;
+                System.Console.SetCursorPosition(0, System.Console.CursorTop);
+                System.Console.Write(new string(' ', System.Console.BufferWidth));
+                System.Console.SetCursorPosition(0, currentLineCursor);
+            }
+            catch (Exception)
+            {
+                // ignored -- may fail in some consoles (e.g. VSCode on macOS)
+            }
         }
     }
 }
