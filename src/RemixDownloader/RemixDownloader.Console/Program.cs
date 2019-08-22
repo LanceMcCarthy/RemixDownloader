@@ -34,6 +34,10 @@ namespace RemixDownloader.Console
             {
                 userId = defaultUserID;
             }
+            else
+            {
+                userId = userId.Trim();
+            }
 
             UpdateStatus("Enter folder path to save files to (e.g. c:\\Users\\You\\Downloads\\). (default: \\appfolder\\Downloads\\):", ConsoleColor.White);
 
