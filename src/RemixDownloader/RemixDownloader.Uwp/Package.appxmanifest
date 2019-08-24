@@ -7,15 +7,15 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="adcc87fa-b966-47bb-97c3-75a6e8972f14"
+    Name="61469LanceLotSoftware.RemixDownloader"
     Publisher="CN=51B5A8B2-5D86-4826-BBE2-C92E963A4C02"
     Version="2019.824.1.0" />
 
-  <mp:PhoneIdentity PhoneProductId="adcc87fa-b966-47bb-97c3-75a6e8972f14" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="7393cded-30f9-4721-bd9a-e5690e3bdf02" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>RemixDownloader.Uwp</DisplayName>
-    <PublisherDisplayName>Lancelot Software, LLC</PublisherDisplayName>
+    <DisplayName>Remix Downloader</DisplayName>
+    <PublisherDisplayName>Lancelot Software</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -32,7 +32,7 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="RemixDownloader.Uwp.App">
       <uap:VisualElements
-        DisplayName="RemixDownloader.Uwp"
+        DisplayName="Remix Downloader"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
         Description="RemixDownloader.Uwp"
