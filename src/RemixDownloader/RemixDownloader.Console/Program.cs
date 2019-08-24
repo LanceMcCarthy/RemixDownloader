@@ -138,6 +138,7 @@ namespace RemixDownloader.Console
         private static async Task<int> DownloadAllFilesAsync(IEnumerable<ModelResult> items, DirectoryInfo selectedFolder, bool includeOptimized = false)
         {
             var successfulDownloads = 0;
+
             foreach (var item in items)
             {
                 try
@@ -152,7 +153,6 @@ namespace RemixDownloader.Console
                     UpdateStatus($"Downloading {item.Name}...", ConsoleColor.DarkYellow);
 
                     // *** Phase 1 - Always downloading the original model file *** //
-
 
                     // Create a subfolder for each group of files.
                     // The ID is suffixed to prevent collisions of models with the same name
@@ -171,14 +171,17 @@ namespace RemixDownloader.Console
                     }
                     
                     var fileType = item.ManifestUris.FirstOrDefault(u => u.Usage == "Download")?.Format.ToLower();
+
                     var fileName = $"{item.Name}.{fileType}";
 
                     var gltfData = await DownloadFile(downloadUrl, _cancellationToken);
+
                     if (gltfData == null)
                     {
                         UpdateStatus($"{fileName} was not downloaded.", ConsoleColor.DarkRed);
                         continue;
                     }
+
                     SaveToDisk(modelSubfolder, fileName, gltfData);
 
                     var gltfModel = ParseGltfModel(gltfData);
@@ -187,12 +190,14 @@ namespace RemixDownloader.Console
 
                     // Extract URIs for resourced referenced by glTF file
                     var bufferUris = gltfModel.Buffers.Select(buffer => buffer.Uri);
+
                     var imageUris = gltfModel.Images.Select(image => image.Uri);
 
                     // Combining list of URIs to make progress tracking simpler (& slightly dedupe code)
                     var additionalResourceUrIs = bufferUris.Concat(imageUris).ToArray();
 
                     var downloadedCount = 0;
+
                     foreach (var filename in additionalResourceUrIs)
                     {
                         UpdateStatus($"Downloading {downloadedCount+1}/{additionalResourceUrIs.Count()} asset(s)", ConsoleColor.White, true);
@@ -203,6 +208,7 @@ namespace RemixDownloader.Console
                     }
                     
                     successfulDownloads++;
+
                     UpdateStatus($"Saved {item.Name}.", ConsoleColor.White, true);
 
                     // *** Phase 2 - Download all the optimized versions available *** //
@@ -265,6 +271,7 @@ namespace RemixDownloader.Console
                                 }
 
                                 var extraFileName = $"{item.Name} ({lod}).{extraFileType}";
+
                                 var extraFilePath = Path.Combine(modelSubfolder.FullName, extraFileName);
 
                                 File.WriteAllBytes(extraFilePath, extraFileBytes);
@@ -288,49 +295,59 @@ namespace RemixDownloader.Console
                     var errorMessage = $"Exception getting {item.Name} - {ex.Message}";
 
                     UpdateStatus(errorMessage, ConsoleColor.Red);
+
                     Debug.WriteLine(errorMessage);
                 }
             }
             return successfulDownloads;
         }
 
-        private static async Task<byte[]> DownloadFile(string downloadUrl, CancellationToken cancellationToken) {
-            var response = await _client.GetAsync(downloadUrl, cancellationToken);
-            
-            if (!response.IsSuccessStatusCode)
+        private static async Task<byte[]> DownloadFile(string downloadUrl, CancellationToken cancellationToken)
+        {
+            using (var response = await _client.GetAsync(downloadUrl, cancellationToken))
             {
-                Debug.WriteLine($"Downloading failed; bad HTTP status code - {response.StatusCode}");
-                return null;
+                if (!response.IsSuccessStatusCode)
+                {
+                    Debug.WriteLine($"Downloading failed; bad HTTP status code - {response.StatusCode}");
+                    return null;
+                }
+
+                return await response.Content.ReadAsByteArrayAsync();
             }
-            
-            return await response.Content.ReadAsByteArrayAsync();
         }
 
         private static void SaveToDisk(FileSystemInfo destinationDirectory, string filename, byte[] data)
         {
             var filePath = Path.Combine(destinationDirectory.FullName, filename);
+
             File.WriteAllBytes(filePath, data);
         }
 
         private static GltfFile ParseGltfModel(byte[] data)
         {
             var jsonString = System.Text.Encoding.UTF8.GetString(data);
+
             return GltfFile.FromJson(jsonString);
         }
 
-        /*
-         * Takes a glTF file URL returned from the API and strips the filename so that "adjacent" components can be downloaded
-         */
+        /// <summary>
+        /// Takes a glTF file URL returned from the API and strips the filename so that "adjacent" components can be downloaded
+        /// </summary>
+        /// <param name="originalGltfUrl"></param>
+        /// <returns></returns>
         private static string GetGltfResourceRootUrl(string originalGltfUrl)
         {
             var urlPieces = new Uri(originalGltfUrl);
+
             var localPath = urlPieces.LocalPath; // e.g. /v3/creations/9...e/gltf/003/9...e/004/0...5/9a1eb96b977d4d11bbca688c9590e11d.glb.gltf
             
             // Trims off the final component of the path in the URL
             // From /v3/creations/9...e/gltf/003/9...e/004/0...5/9a1eb96b977d4d11bbca688c9590e11d.glb.gltf
             // To   /v3/creations/9...e/gltf/003/9...e/004/0...5
             var pathPieces = localPath.Split("/");
+
             var sansFinalResource = string.Join("/", pathPieces.SkipLast(1).ToArray());
+
             return $"{urlPieces.Scheme}://{urlPieces.Host}{sansFinalResource}";
         }
 
@@ -341,6 +358,7 @@ namespace RemixDownloader.Console
             _cancellationTokenSource.Cancel();
 
             _hasMoreItems = false;
+
             e.Cancel = true;
 
             UpdateStatus("Cancel request complete.", ConsoleColor.White);

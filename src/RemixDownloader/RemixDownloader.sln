@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemixDownloader.Uwp", "Remi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemixDownloader.Core", "RemixDownloader.Core\RemixDownloader.Core.csproj", "{63829EFD-10DE-41F5-AE14-A588FA47C51A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemixDownloader.Console", "RemixDownloader.Console\RemixDownloader.Console.csproj", "{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemixDownloader.Console", "RemixDownloader.Console\RemixDownloader.Console.csproj", "{B0F6E0C8-B34C-444E-A8D0-C67E60DD7AAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
