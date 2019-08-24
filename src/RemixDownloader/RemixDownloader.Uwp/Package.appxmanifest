@@ -9,7 +9,7 @@
   <Identity
     Name="61469LanceLotSoftware.RemixDownloader"
     Publisher="CN=51B5A8B2-5D86-4826-BBE2-C92E963A4C02"
-    Version="2019.824.1.0" />
+    Version="2019.824.2.0" />
 
   <mp:PhoneIdentity PhoneProductId="7393cded-30f9-4721-bd9a-e5690e3bdf02" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
