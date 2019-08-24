@@ -9,7 +9,7 @@
   <Identity
     Name="adcc87fa-b966-47bb-97c3-75a6e8972f14"
     Publisher="CN=&quot;Lancelot Software, LLC&quot;, O=&quot;Lancelot Software, LLC&quot;, L=NORTH BILLERICA, S=Massachusetts, C=US"
-    Version="2019.822.1.0" />
+    Version="2019.824.1.0" />
 
   <mp:PhoneIdentity PhoneProductId="adcc87fa-b966-47bb-97c3-75a6e8972f14" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
