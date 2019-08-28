@@ -7,17 +7,24 @@ An application that lets you quickly download 3D models in bulk from Remix 3D. T
 | .NET Core Console App | [![Console](https://dev.azure.com/lance/RemixDownloader/_apis/build/status/RemixDownloader%20Console)](https://dev.azure.com/lance/RemixDownloader/_build/latest?definitionId=22) | ![](https://vsrm.dev.azure.com/lance/_apis/public/Release/badge/1fb26b14-bf7c-446d-9ce2-f817fdc1756b/2/2) |
 | UWP App | [![Build status](https://dev.azure.com/lance/RemixDownloader/_apis/build/status/RemixDownloader%20UWP)](https://dev.azure.com/lance/RemixDownloader/_build/latest?definitionId=23) | ![](https://vsrm.dev.azure.com/lance/_apis/public/Release/badge/1fb26b14-bf7c-446d-9ce2-f817fdc1756b/1/1) |
 
+## Installation
 
+- **UWP** (*Windows 10*): Safely install the UWP app from the Microsoft Store - <u>**[RemixDownloader](https://www.microsoft.com/store/apps/9NSQ8PJ89SJT)**</u>
+- **Console** (*Windows/Linux/MacOS*): Download the latest Console version for your platform from the <u>**[Releases Page](https://github.com/LanceMcCarthy/RemixDownloader/releases)**</u>
 
-### First Step - Getting the User ID
+## Instructions
+
+### Step 1 - Get the User ID or Board ID
 
 To browse models, you'll need a Remix3D.com user ID code. You can easily get that code from the Remix3D website in the web browser address bar. Here are the steps to load models.
 
-1. Go to a user's page in [Remix3D.com](https://www.remix3d.com)
-2. Look in the address bar and get the UserID code, it is between `user/` and the question mark (see screenshot below).
+1. Go to a user's profile page or the board page on [Remix3D.com](https://www.remix3d.com)
+2. Look in the address bar and get the User ID or Board ID (see screenshot below).
 3. Use that code in the app when you're asked for a User ID.
 
-![image](https://user-images.githubusercontent.com/3520532/61412729-9f80a300-a8b7-11e9-912f-c899c6889b0e.png)
+![user id](https://user-images.githubusercontent.com/3520532/61412729-9f80a300-a8b7-11e9-912f-c899c6889b0e.png)
+
+![board id](https://user-images.githubusercontent.com/3520532/63898054-74649580-c9c5-11e9-95e8-c90d25bdfaa2.png)
 
 > There is a default User ID `46rbnCYv5fy` in the app to help you get started, it's the **Xbox** account. Another example is `46reU3-wFPz`, this is the **Microsoft** account seen in the screenshot above (2,139 models).
 
