@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using RemixDownloader.Core.Models;
 using RemixDownloader.Core.Services;
+using RemixDownloader.Core.Utilities;
 
 namespace RemixDownloader.Console
 {
@@ -184,9 +185,9 @@ namespace RemixDownloader.Console
 
                     SaveToDisk(modelSubfolder, fileName, gltfData);
 
-                    var gltfModel = ParseGltfModel(gltfData);
+                    var gltfModel = GltfHelpers.ParseGltfModel(gltfData);
 
-                    var resourceRootUrl = GetGltfResourceRootUrl(downloadUrl);
+                    var resourceRootUrl = GltfHelpers.GetGltfResourceRootUrl(downloadUrl);
 
                     // Extract URIs for resourced referenced by glTF file
                     var bufferUris = gltfModel.Buffers.Select(buffer => buffer.Uri);
@@ -321,34 +322,6 @@ namespace RemixDownloader.Console
             var filePath = Path.Combine(destinationDirectory.FullName, filename);
 
             File.WriteAllBytes(filePath, data);
-        }
-
-        private static GltfFile ParseGltfModel(byte[] data)
-        {
-            var jsonString = System.Text.Encoding.UTF8.GetString(data);
-
-            return GltfFile.FromJson(jsonString);
-        }
-
-        /// <summary>
-        /// Takes a glTF file URL returned from the API and strips the filename so that "adjacent" components can be downloaded
-        /// </summary>
-        /// <param name="originalGltfUrl"></param>
-        /// <returns></returns>
-        private static string GetGltfResourceRootUrl(string originalGltfUrl)
-        {
-            var urlPieces = new Uri(originalGltfUrl);
-
-            var localPath = urlPieces.LocalPath; // e.g. /v3/creations/9...e/gltf/003/9...e/004/0...5/9a1eb96b977d4d11bbca688c9590e11d.glb.gltf
-            
-            // Trims off the final component of the path in the URL
-            // From /v3/creations/9...e/gltf/003/9...e/004/0...5/9a1eb96b977d4d11bbca688c9590e11d.glb.gltf
-            // To   /v3/creations/9...e/gltf/003/9...e/004/0...5
-            var pathPieces = localPath.Split("/");
-
-            var sansFinalResource = string.Join("/", pathPieces.SkipLast(1).ToArray());
-
-            return $"{urlPieces.Scheme}://{urlPieces.Host}{sansFinalResource}";
         }
 
         private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
