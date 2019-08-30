@@ -1,0 +1,16 @@
+name: Greetings
+
+on: [pull_request, issues]
+
+jobs:
+  greeting:
+    name: 'Greeting'
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+    - uses: actions/first-interaction@v1
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        issue-message: 'Thank you for opening an Issue! If the problem is due to a specific user or board ID, please provide that ID so I can directly investigate.'
+        pr-message: 'Thank you for opening a Pull Request. There will be two validation builds, after this passes I'll be able to review.'
