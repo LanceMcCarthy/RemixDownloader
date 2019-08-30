@@ -1,0 +1,78 @@
+name: console-apps-workflow
+  on:
+    push:
+      branches:
+        - workflows-test
+  jobs:
+    job1:
+      name: Build console Windows x86
+      runs-on: windows-latest
+      steps: 
+      - uses: actions/checkout@master
+      - uses: actions/setup-dotnet@v1
+        with: 
+          dotnet-version: '3.0.100-preview8-013656'
+      - name: Restore Packages
+          run: 'dotnet restore **\.sln --configuration win-x86'
+      - name: Publish
+          run: 'dotnet publish **\.sln -c Release -r win-x86 --self-contained true --output $(build.artifactstagingdirectory)'
+    job2:
+      name: Build console Windows ARM
+      runs-on: windows-latest
+      steps: 
+      - uses: actions/checkout@master
+      - uses: actions/setup-dotnet@v1
+        with: 
+          dotnet-version: '3.0.100-preview8-013656'
+      - name: Restore Packages
+          run: 'dotnet restore **\.sln --configuration win-arm'
+      - name: Publish
+          run: 'dotnet publish **\.sln -c Release -r win-arm --self-contained true --output $(build.artifactstagingdirectory)'
+    job3:
+      name: Build console OSX x64
+      runs-on: windows-latest
+      steps: 
+      - uses: actions/checkout@master
+      - uses: actions/setup-dotnet@v1
+        with: 
+          dotnet-version: '3.0.100-preview8-013656'
+      - name: Restore Packages
+          run: 'dotnet restore **\.sln --configuration osx-x64'
+      - name: Publish
+          run: 'dotnet publish **\.sln -c Release -r osx-x64 --self-contained true --output $(build.artifactstagingdirectory)'
+    job4:
+      name: Build console Linux ARM
+      runs-on: windows-latest
+      steps: 
+      - uses: actions/checkout@master
+      - uses: actions/setup-dotnet@v1
+        with: 
+          dotnet-version: '3.0.100-preview8-013656'
+      - name: Restore Packages
+          run: 'dotnet restore **\.sln --configuration linux-arm'
+      - name: Publish
+          run: 'dotnet publish **\.sln -c Release -r linux-arm --self-contained true --output $(build.artifactstagingdirectory)'
+    job5:
+      name: Build console Linux x64
+      runs-on: windows-latest
+      steps: 
+      - uses: actions/checkout@master
+      - uses: actions/setup-dotnet@v1
+        with: 
+          dotnet-version: '3.0.100-preview8-013656'
+      - name: Restore Packages
+          run: 'dotnet restore **\.sln --configuration linux-x64'
+      - name: Publish
+          run: 'dotnet publish **\.sln -c Release -r linux-x64 --self-contained true --output $(build.artifactstagingdirectory)'
+    job6:
+      name: Build console Linux x86
+      runs-on: windows-latest
+      steps: 
+      - uses: actions/checkout@master
+      - uses: actions/setup-dotnet@v1
+        with: 
+          dotnet-version: '3.0.100-preview8-013656'
+      - name: Restore Packages
+          run: 'dotnet restore **\.sln --configuration linux-x86'
+      - name: Publish
+          run: 'dotnet publish **\.sln -c Release -r linux-x86 --self-contained true --output $(build.artifactstagingdirectory)'

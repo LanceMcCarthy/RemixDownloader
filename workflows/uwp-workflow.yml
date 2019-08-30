@@ -1,0 +1,26 @@
+name: uwp-workflow
+on:
+  push:
+    branches:
+      - workflows-test
+jobs:
+  job1:
+    name: Build UWP
+    runs-on: windows-latest
+    steps: 
+    - name: 'Use NuGet 4.4.1'
+      env:
+        BUILD_PLATFORM: 'x86'
+        BUILD_CONFIGURATION: 'release'
+      run:
+        versionSpec: 4.4.1
+    - name: NuGet restore **\*.sln
+       run:
+        restoreSolution: '**\*sln'
+    - name: 'Build solution **\*sln'
+        run:
+          solution: '**\*sln'
+          vsVersion: 15.0
+          msbuildArgs: '/p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\AppxPackages\\" /p:AppxBundle=Always /p:UapAppxPackageBuildMode=CI /p:AppxPackageSigningEnabled=false'
+          platform: 'x86'
+          configuration: 'Release'
