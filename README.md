@@ -1,3 +1,5 @@
+> **DEPRECATED** The Remix3D website and API has been shut down by Microsoft. Therefore, this repository is no longer accepting pull requests. If you were not able to get a particular model in time, contact me on Twitter [@lancewmccarthy](https://www.twitter.com/lancewmccarthy) with the name of the model and I will send you the file.
+
 # RemixDownloader
 An application that lets you quickly download 3D models in bulk from Remix 3D. This functionality is not available via the website.
 
