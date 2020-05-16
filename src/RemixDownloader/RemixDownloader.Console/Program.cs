@@ -146,7 +146,24 @@ namespace RemixDownloader.Console
                 includeOptimizedString = "n";
             }
 
-            bool includeOptimized = includeOptimizedString == "y";
+            var includeOptimized = includeOptimizedString == "y";
+
+
+            // ********* Ask whether existing models should be overwritten. *********** //
+
+            UpdateStatus("Do you want existing models to be overwritten? (default: N)?", ConsoleColor.DarkYellow);
+            UpdateStatus("- [Y/y] Yes, download all models for given " + (_isBoardId ? "Board ID" : "User ID") +
+                         "\n- [N/n] No, ignore models which already have a folder.",
+                ConsoleColor.Yellow);
+
+            var overrideExistingString = System.Console.ReadLine()?.ToLower();
+
+            if (string.IsNullOrEmpty(overrideExistingString))
+            {
+                overrideExistingString = "n";
+            }
+
+            var overrideExisting = overrideExistingString == "y";
 
 
             // ********* Start Downloading User Models *********** //
@@ -156,12 +173,12 @@ namespace RemixDownloader.Console
             if (_isBoardId)
             {
                 // Download models with a Board ID.
-                await GetBoardModelsAsync(id, userDirectory, includeOptimized);
+                await GetBoardModelsAsync(id, userDirectory, includeOptimized, overrideExisting);
             }
             else
             {
                 // Download models with a User ID.
-                await GetUserModelsAsync(id, userDirectory, includeOptimized);
+                await GetUserModelsAsync(id, userDirectory, includeOptimized, overrideExisting);
             }
 
             System.Console.Title = "Complete! Remix3D Downloader";
@@ -175,7 +192,7 @@ namespace RemixDownloader.Console
             _client = null;
         }
 
-        private static async Task GetUserModelsAsync(string userId, DirectoryInfo folderPath, bool includeOptimized)
+        private static async Task GetUserModelsAsync(string userId, DirectoryInfo folderPath, bool includeOptimized, bool overrideExisting)
         {
             string contUrl = string.Empty;
 
@@ -202,7 +219,7 @@ namespace RemixDownloader.Console
                     contUrl = result.ContinuationUri;
 
                     // This Task will try to download all the files for each of the recently fetched models.
-                    var numSuccessfulDownloads = await DownloadAllFilesAsync(result.Results, folderPath, includeOptimized);
+                    var numSuccessfulDownloads = await DownloadAllFilesAsync(result.Results, folderPath, includeOptimized, overrideExisting);
 
                     downloadCount += numSuccessfulDownloads;
 
@@ -223,7 +240,7 @@ namespace RemixDownloader.Console
             UpdateStatus("DONE!", ConsoleColor.White);
         }
 
-        private static async Task GetBoardModelsAsync(string boardId, DirectoryInfo folderPath, bool includeOptimized)
+        private static async Task GetBoardModelsAsync(string boardId, DirectoryInfo folderPath, bool includeOptimized, bool overrideExisting)
         {
             string contUrl = string.Empty;
 
@@ -250,7 +267,7 @@ namespace RemixDownloader.Console
                     contUrl = result.Items.ContinuationUri;
 
                     // This Task will try to download all the files for each of the recently fetched models.
-                    var numSuccessfulDownloads = await DownloadAllFilesAsync(result.Items.Results, folderPath, includeOptimized);
+                    var numSuccessfulDownloads = await DownloadAllFilesAsync(result.Items.Results, folderPath, includeOptimized, overrideExisting);
 
                     downloadCount += numSuccessfulDownloads;
 
@@ -271,7 +288,7 @@ namespace RemixDownloader.Console
             UpdateStatus("DONE!", ConsoleColor.White);
         }
 
-        private static async Task<int> DownloadAllFilesAsync(IEnumerable<ModelResult> items, DirectoryInfo selectedFolder, bool includeOptimized = false)
+        private static async Task<int> DownloadAllFilesAsync(IEnumerable<ModelResult> items, DirectoryInfo selectedFolder, bool includeOptimized = false, bool overrideExisting = false)
         {
             var successfulDownloads = 0;
 
@@ -292,6 +309,11 @@ namespace RemixDownloader.Console
 
                     // Create a subfolder for each group of files.
                     // The ID is suffixed to prevent collisions of models with the same name
+                    if (!overrideExisting && selectedFolder.GetDirectories($"{item.Name}-{item.Id}").Length > 0)
+                    {
+                        UpdateStatus($"Ignoring existing {item.Name}...", ConsoleColor.DarkGreen);
+                        continue;
+                    }
                     var modelSubfolder = selectedFolder.CreateSubdirectory($"{item.Name}-{item.Id}");
 
                     // Get the original model file
